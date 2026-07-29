@@ -20,7 +20,7 @@ jobs:
       run: |
         npm init -y
         npm install @capacitor/core @capacitor/cli @capacitor/android
-        npx cap init MeuApp com.meuapp.gerador --web-dir . --yes
+        npx cap init MeuApp com.meuapp.gerador --web-dir .
         npx cap add android
 
     - name: Compilar APK
