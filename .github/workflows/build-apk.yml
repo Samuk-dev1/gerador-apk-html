@@ -19,7 +19,7 @@ jobs:
     - name: Instalar Capacitor
       run: |
         npm install -g @ionic/cli
-        npm install @capacitor/core @capacitor/cli
+        npm install @capacitor/core @capacitor/cli @capacitor/android
 
     - name: Criar aplicativo Android
       run: |
