@@ -28,15 +28,14 @@ jobs:
         npm init -y
         npm install @capacitor/core @capacitor/android
         
-        # Cria a estrutura nativa Android se não existir
+        # Tiramos o --yes daqui para o robô não travar mais!
         if [ ! -d "android" ]; then
-          npx cap init MeuApp com.meuapp.gerador --web-dir . --yes
+          npx cap init MeuApp com.meuapp.gerador --web-dir .
           npx cap add android
         fi
 
     - name: Sincronizar HTML Atualizado
       run: |
-        # Copia o index.html atual da raiz para a pasta web do Android
         npx cap sync android
 
     - name: Compilar APK de Debug
