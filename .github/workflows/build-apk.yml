@@ -16,29 +16,37 @@ jobs:
       with:
         node-version: 22
 
-    - name: Configurar Java 17
+    - name: Configurar Java 21
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
 
-    - name: Configurar e Gerar APK
+    - name: Configurar Projeto e Injetar App
       run: |
         npm init -y
         npm install @capacitor/core @capacitor/cli @capacitor/android
         
+        # Cria a estrutura do Capacitor apontando para a pasta web correta
+        npx cap init FiadoApp com.fiadoapp.app --web-dir www --yes
+        npx cap add android
+
+        # Se você já tiver o arquivo index.html na raiz do projeto, ele copia para a pasta www. 
+        # Se não tiver, ele usa o código HTML padrão que garante que o app abra perfeitamente.
         mkdir -p www
-        if [ ! -f "www/index.html" ]; then
-          echo "<html><body><h1>Meu App</h1></body></html>" > www/index.html
+        if [ -f "index.html" ]; then
+          cp index.html www/index.html
+        else
+          echo "<html><body><h1>FiadoApp</h1></body></html>" > www/index.html
         fi
 
-        npx cap init MeuApp com.meuapp.gerador --web-dir www
-        npx cap add android
+        # Sincroniza os arquivos web com o Android nativo
+        npx cap sync android
 
     - name: Compilar APK
       run: |
         cd android
-        ./gradlew assembleDebug --refresh-dependencies
+        ./gradlew assembleDebug
 
     - name: Salvar APK
       uses: actions/upload-artifact@v4
