@@ -1,0 +1,35 @@
+name: Gerar APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar projeto
+      uses: actions/checkout@v4
+
+    - name: Configurar Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Configurar e Gerar APK
+      run: |
+        npm init -y
+        npm install @capacitor/core @capacitor/cli @capacitor/android
+        npx cap init MeuApp com.meuapp.gerador --web-dir . --yes
+        npx cap add android
+
+    - name: Compilar APK
+      run: |
+        cd android
+        ./gradlew assembleDebug
+
+    - name: Salvar APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: meu-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
