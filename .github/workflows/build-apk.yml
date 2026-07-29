@@ -16,14 +16,13 @@ jobs:
       with:
         node-version: 20
 
-    - name: Instalar Capacitor
+    - name: Instalar Capacitor e Dependências
       run: |
-        npm install -g @ionic/cli
         npm install @capacitor/core @capacitor/cli @capacitor/android
 
-    - name: Criar aplicativo Android
+    - name: Criar Configuração e Adicionar Android
       run: |
-        npx cap init MeuApp com.meuapp.gerador --web-dir .
+        npx cap init MeuApp com.meuapp.gerador --web-dir . --yes
         npx cap add android
 
     - name: Compilar APK
