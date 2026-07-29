@@ -16,22 +16,20 @@ jobs:
       with:
         node-version: 20
 
-    - name: Configurar Java 17
+    - name: Configurar Java 21
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
 
     - name: Preparar Ambiente e Gerar
       run: |
         npm init -y
         npm install @capacitor/core @capacitor/android @capacitor/cli
         
-        # Cria a pasta que o Capacitor exige e move o seu HTML para lá
         mkdir -p www
         cp index.html www/index.html
         
-        # Inicializa o projeto apontando para a pasta correta
         npx cap init MeuApp com.meuapp.gerador --web-dir www
         npx cap add android
         npx cap sync android
