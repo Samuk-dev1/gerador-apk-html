@@ -16,11 +16,15 @@ jobs:
       with:
         node-version: 20
 
-    - name: Instalar Capacitor e Dependências
+    - name: Criar package.json Inicial
+      run: |
+        npm init -y
+
+    - name: Instalar Capacitor e Android
       run: |
         npm install @capacitor/core @capacitor/cli @capacitor/android
 
-    - name: Criar Configuração e Adicionar Android
+    - name: Configurar e Adicionar Android
       run: |
         npx cap init MeuApp com.meuapp.gerador --web-dir . --yes
         npx cap add android
