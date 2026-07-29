@@ -3,245 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FiadoApp - Controle de Caderneta</title>
-    <!-- Tailwind CSS para um design moderno e profissional -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Gestor Lojinha</title>
     <style>
-        /* Ajustes para parecer App nativo */
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --bg: #f4f7f6;
+            --text: #333;
+            --card-bg: #fff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
         body {
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            background-color: #f3f4f6;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll, handle in content */
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        /* Tabs */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards & Forms */
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+        }
+
+        button.btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.btn:active {
+            background-color: var(--primary-dark);
+        }
+
+        /* Dashboard & History */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .total-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-top: 5px;
+        }
+
+        .sale-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sale-item:last-child {
+            border-bottom: none;
+        }
+
+        .sale-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sale-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .sale-date {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 3px;
+        }
+
+        .sale-price {
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 1.1rem;
+        }
+
+        .btn-delete {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 15px 0;
+            color: #888;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
         }
     </style>
 </head>
-<body class="flex flex-col h-screen justify-between">
+<body>
 
-    <!-- Cabeçalho -->
-    <header class="bg-indigo-600 text-white p-4 shadow-md flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-bold"><i class="fa-solid fa-book-open mr-2"></i>FiadoApp</h1>
-            <p class="text-xs text-indigo-200">Gerenciamento de Caderneta</p>
+    <header>Gestor Lojinha</header>
+
+    <div class="content">
+        <!-- Aba: Nova Venda -->
+        <div id="tab-vender" class="tab-content active">
+            <div class="card">
+                <form id="formVenda">
+                    <div class="input-group">
+                        <label>Nome do Produto/Serviço</label>
+                        <input type="text" id="produto" placeholder="Ex: Camiseta preta" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Quantidade</label>
+                        <input type="number" id="quantidade" value="1" min="1" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Preço Unitário (R$)</label>
+                        <input type="number" id="preco" step="0.01" placeholder="Ex: 45.00" required>
+                    </div>
+
+                    <button type="submit" class="btn">Registrar Venda</button>
+                </form>
+            </div>
         </div>
-        <button onclick="abrirModalCliente()" class="bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow">
-            <i class="fa-solid fa-user-plus mr-1"></i> Novo Cliente
-        </button>
-    </header>
 
-    <!-- Resumo do Caixa/Fiado -->
-    <section class="p-4 bg-white border-b shadow-sm grid grid-cols-2 gap-4">
-        <div class="bg-red-50 p-3 rounded-xl border border-red-100">
-            <span class="text-xs text-red-500 font-bold uppercase">Total a Receber</span>
-            <h2 id="totalFiado" class="text-xl font-extrabold text-red-600">R$ 0,00</h2>
-        </div>
-        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-            <span class="text-xs text-emerald-500 font-bold uppercase">Clientes Devedores</span>
-            <h2 id="totalClientes" class="text-xl font-extrabold text-emerald-600">0</h2>
-        </div>
-    </section>
-
-    <!-- Barra de Pesquisa -->
-    <div class="p-4 pb-0">
-        <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                <i class="fa-solid fa-search"></i>
-            </span>
-            <input type="text" id="buscaCliente" oninput="filtrarClientes()" placeholder="Buscar cliente..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-    </div>
-
-    <!-- Lista de Clientes -->
-    <main class="flex-1 overflow-y-auto p-4 space-y-3" id="listaClientes">
-        <!-- Os clientes serão injetados via JavaScript -->
-    </main>
-
-    <!-- Modal: Adicionar Cliente -->
-    <div id="modalCliente" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Adicionar Novo Cliente</h3>
-            <form onsubmit="salvarCliente(event)">
-                <div class="mb-3">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nome do Cliente</label>
-                    <input type="text" id="nomeCliente" required class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Telefone / WhatsApp</label>
-                    <input type="tel" id="telCliente" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div class="flex space-x-2">
-                    <button type="button" onclick="fecharModalCliente()" class="w-1/2 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-semibold">Cancelar</button>
-                    <button type="submit" class="w-1/2 bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal: Gerenciar Dívida / Novo Lançamento -->
-    <div id="modalDivida" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
-            <h3 id="tituloModalDivida" class="text-lg font-bold text-gray-800 mb-2">Conta de [Cliente]</h3>
-            <p class="text-xs text-gray-500 mb-4">Saldo atual: <span id="saldoAtualCliente" class="font-bold text-red-600">R$ 0,00</span></p>
-            
-            <div class="space-y-3 mb-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Valor (R$)</label>
-                    <input type="number" step="0.01" id="valorTransacao" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Descrição / Produto</label>
-                    <input type="text" id="descricaoTransacao" placeholder="Ex: 2kg de carne, Refrigerante..." class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
+        <!-- Aba: Histórico/Dashboard -->
+        <div id="tab-historico" class="tab-content">
+            <div class="card dashboard-header">
+                <p>Total Faturado</p>
+                <div class="total-amount" id="totalFaturado">R$ 0,00</div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <button onclick="adicionarDivida()" class="bg-red-600 hover:bg-red-500 text-white py-2 rounded-lg text-xs font-bold uppercase shadow"><i class="fa-solid fa-plus mr-1"></i> Fiado (+)</button>
-                <button onclick="realizarPagamento()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-bold uppercase shadow"><i class="fa-solid fa-minus mr-1"></i> Pagar (-)</button>
+            <div class="card">
+                <h3>Últimas Vendas</h3>
+                <div id="listaVendas">
+                    <!-- As vendas aparecerão aqui via JavaScript -->
+                </div>
             </div>
-            <button onclick="fecharModalDivida()" class="w-full bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-semibold">Fechar</button>
         </div>
     </div>
 
-    <!-- Script de Lógica do Sistema -->
+    <!-- Navegação Inferior -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('tab-vender', this)">
+            <span class="nav-icon">🛒</span>
+            <span>Nova Venda</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-historico', this)">
+            <span class="nav-icon">📊</span>
+            <span>Histórico</span>
+        </div>
+    </div>
+
     <script>
-        let clientes = JSON.parse(localStorage.getItem('fiado_clientes')) || [];
-        let clienteAtivoId = null;
+        // Inicialização de Dados
+        let vendas = JSON.parse(localStorage.getItem('lojinha_vendas')) || [];
 
-        function salvarStorage() {
-            localStorage.setItem('fiado_clientes', JSON.stringify(clientes));
-            atualizarDashboard();
-        }
+        // Função para formatar dinheiro (BRL)
+        const formatarMoeda = (valor) => {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
 
-        function abrirModalCliente() {
-            document.getElementById('modalCliente').classList.remove('hidden');
-        }
+        // Função para formatar data
+        const formatarData = (dataString) => {
+            const data = new Date(dataString);
+            return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        };
 
-        function fecharModalCliente() {
-            document.getElementById('modalCliente').classList.add('hidden');
-            document.getElementById('nomeCliente').value = '';
-            document.getElementById('telCliente').value = '';
-        }
+        // Salvar no dispositivo
+        const salvarVendas = () => {
+            localStorage.setItem('lojinha_vendas', JSON.stringify(vendas));
+            atualizarHistorico();
+        };
 
-        function salvarCliente(e) {
+        // Registrar nova venda
+        document.getElementById('formVenda').addEventListener('submit', function(e) {
             e.preventDefault();
-            const nome = document.getElementById('nomeCliente').value;
-            const telefone = document.getElementById('telCliente').value;
 
-            const novoCliente = {
+            const produto = document.getElementById('produto').value;
+            const quantidade = parseInt(document.getElementById('quantidade').value);
+            const preco = parseFloat(document.getElementById('preco').value);
+            
+            const totalItem = quantidade * preco;
+
+            const novaVenda = {
                 id: Date.now(),
-                nome,
-                telefone,
-                saldo: 0,
-                historico: []
+                produto: produto,
+                quantidade: quantidade,
+                precoUnitario: preco,
+                total: totalItem,
+                data: new Date().toISOString()
             };
 
-            clientes.push(novoCliente);
-            salvarStorage();
-            fecharModalCliente();
-            renderizarClientes();
-        }
+            vendas.unshift(novaVenda); // Adiciona no início do array
+            salvarVendas();
 
-        function renderizarClientes(lista = clientes) {
-            const container = document.getElementById('listaClientes');
-            container.innerHTML = '';
+            // Limpa o formulário e avisa
+            this.reset();
+            document.getElementById('quantidade').value = 1;
+            alert('Venda registrada com sucesso!');
+        });
 
-            if (lista.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-10 text-gray-400">
-                        <i class="fa-solid fa-folder-open text-4xl mb-2"></i>
-                        <p class="text-sm">Nenhum cliente cadastrado.</p>
-                    </div>`;
-                return;
+        // Deletar venda
+        const deletarVenda = (id) => {
+            if(confirm('Tem certeza que deseja apagar esta venda?')) {
+                vendas = vendas.filter(v => v.id !== id);
+                salvarVendas();
+            }
+        };
+
+        // Atualizar tela de histórico
+        const atualizarHistorico = () => {
+            const lista = document.getElementById('listaVendas');
+            const totalElement = document.getElementById('totalFaturado');
+            
+            lista.innerHTML = '';
+            let somaTotal = 0;
+
+            if (vendas.length === 0) {
+                lista.innerHTML = '<p style="text-align:center; color:#888; margin-top:15px;">Nenhuma venda registrada ainda.</p>';
+            } else {
+                vendas.forEach(venda => {
+                    somaTotal += venda.total;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'sale-item';
+                    div.innerHTML = `
+                        <div class="sale-info">
+                            <span class="sale-title">${venda.quantidade}x ${venda.produto}</span>
+                            <span class="sale-date">${formatarData(venda.data)}</span>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <span class="sale-price">${formatarMoeda(venda.total)}</span>
+                            <button class="btn-delete" onclick="deletarVenda(${venda.id})">X</button>
+                        </div>
+                    `;
+                    lista.appendChild(div);
+                });
             }
 
-            lista.forEach(cliente => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center";
-                card.innerHTML = `
-                    <div>
-                        <h4 class="font-bold text-gray-800">${cliente.nome}</h4>
-                        <p class="text-xs text-gray-500"><i class="fa-solid fa-phone mr-1"></i>${cliente.telefone || 'Sem telefone'}</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="block text-sm font-extrabold ${cliente.saldo > 0 ? 'text-red-600' : 'text-emerald-600'}">
-                            R$ ${cliente.saldo.toFixed(2)}
-                        </span>
-                        <button onclick="abrirModalDivida(${cliente.id})" class="mt-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1 rounded-lg text-xs font-semibold">
-                            Gerenciar
-                        </button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
+            totalElement.textContent = formatarMoeda(somaTotal);
+        };
 
-        function abrirModalDivida(id) {
-            clienteAtivoId = id;
-            const cliente = clientes.find(c => c.id === id);
-            document.getElementById('tituloModalDivida').innerText = cliente.nome;
-            document.getElementById('saldoAtualCliente').innerText = `R$ ${cliente.saldo.toFixed(2)}`;
-            document.getElementById('valorTransacao').value = '';
-            document.getElementById('descricaoTransacao').value = '';
-            document.getElementById('modalDivida').classList.remove('hidden');
-        }
-
-        function fecharModalDivida() {
-            document.getElementById('modalDivida').classList.add('hidden');
-            clienteAtivoId = null;
-            renderizarClientes();
-        }
-
-        function adicionarDivida() {
-            const valor = parseFloat(document.getElementById('valorTransacao').value);
-            const desc = document.getElementById('descricaoTransacao').value || 'Compra fiado';
-            if (!valor || valor <= 0) return alert('Digite um valor válido');
-
-            const cliente = clientes.find(c => c.id === clienteAtivoId);
-            cliente.saldo += valor;
-            cliente.historico.push({ tipo: 'fiado', valor, desc, data: new Date().toLocaleDateString('pt-BR') });
+        // Trocar de abas
+        function switchTab(tabId, element) {
+            // Remove active classes
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             
-            salvarStorage();
-            abrirModalDivida(clienteAtivoId);
+            // Add active class
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+
+            // Se for a aba de histórico, atualiza os dados antes de mostrar
+            if(tabId === 'tab-historico') {
+                atualizarHistorico();
+            }
         }
 
-        function realizarPagamento() {
-            const valor = parseFloat(document.getElementById('valorTransacao').value);
-            const desc = document.getElementById('descricaoTransacao').value || 'Pagamento parcial/total';
-            if (!valor || valor <= 0) return alert('Digite um valor válido');
-
-            const cliente = clientes.find(c => c.id === clienteAtivoId);
-            cliente.saldo -= valor;
-            cliente.historico.push({ tipo: 'pagamento', valor, desc, data: new Date().toLocaleDateString('pt-BR') });
-            
-            salvarStorage();
-            abrirModalDivida(clienteAtivoId);
-        }
-
-        function atualizarDashboard() {
-            let totalGeral = 0;
-            let devedoresCount = 0;
-
-            clientes.forEach(c => {
-                if (c.saldo > 0) {
-                    totalGeral += c.saldo;
-                    devedoresCount++;
-                }
-            });
-
-            document.getElementById('totalFiado').innerText = `R$ ${totalGeral.toFixed(2)}`;
-            document.getElementById('totalClientes').innerText = devedoresCount;
-        }
-
-        function filtrarClientes() {
-            const termo = document.getElementById('buscaCliente').value.toLowerCase();
-            const filtrados = clientes.filter(c => c.nome.toLowerCase().includes(termo));
-            renderizarClientes(filtrados);
-        }
-
-        // Inicialização
-        renderizarClientes();
-        atualizarDashboard();
+        // Carrega o histórico assim que o app abre
+        atualizarHistorico();
     </script>
 </body>
 </html>
