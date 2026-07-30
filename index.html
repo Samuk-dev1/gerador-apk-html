@@ -1,1 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b1220" />
+<title>IPTV Cobranças — Gestão de Clientes e Lembretes no WhatsApp</title>
+<meta name="description" content="Sistema completo de cobranças IPTV: clientes, planos, vencimentos, renovação, financeiro e lembrete personalizado direto no WhatsApp." />
+<style>
+:root{
+  --bg:#0b1220; --bg2:#101a2e; --card:#141f36; --card2:#1a2745;
+  --line:#22314f; --txt:#e8eefc; --muted:#94a6c6;
+  --acc:#28d17c; --acc2:#1fb267; --warn:#ffb020; --dan:#ff5f57; --blue:#4d9bff;
+  --r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:86px;font-size:15px}
+a{color:inherit}
+header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0b1220,#0b1220ee);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 14px calc(12px + env(safe-area-inset-top,0px));padding-top:calc(12px + env(safe-area-inset-top,0px))}
+.hrow{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--acc),#0ea5e9);display:grid;place-items:center;font-weight:800;color:#04210f}
+h1{font-size:17px;margin:0;font-weight:800;letter-spacing:.2px}
+.sub{font-size:11px;color:var(--muted);margin-top:1px}
+main{padding:14px;max-width:900px;margin:0 auto}
+.hide{display:none!important}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:520px){.g4{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:13px}
+.stat b{display:block;font-size:21px;margin-top:3px}
+.stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.sec{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:18px 4px 8px;font-weight:700}
+input,select,textarea,button{font-family:inherit;font-size:15px}
+input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:11px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+label{font-size:12px;color:var(--muted);display:block;margin:0 0 5px 3px}
+.field{margin-bottom:11px}
+.btn{background:var(--acc);color:#05230f;border:0;border-radius:11px;padding:12px 14px;font-weight:800;cursor:pointer;width:100%}
+.btn.sec2{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.btn.dan{background:#3a1a1e;color:#ff8b85;border:1px solid #5d2a2f}
+.btn.sm{padding:9px 11px;font-size:13px;width:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.cli{display:flex;gap:11px;align-items:flex-start;padding:12px;border:1px solid var(--line);background:var(--card);border-radius:var(--r);margin-bottom:9px}
+.av{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#04210f;background:var(--acc)}
+.cli .nm{font-weight:700}
+.cli .mt{font-size:12px;color:var(--muted);margin-top:2px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.4px}
+.t-ok{background:#0f3324;color:#4ade80}.t-hoje{background:#3b2e08;color:var(--warn)}.t-late{background:#3a1418;color:#ff8b85}.t-off{background:#26324d;color:var(--muted)}
+.wa{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:#25D366;display:grid;place-items:center;cursor:pointer;border:0}
+.wa svg{width:24px;height:24px;fill:#062d15}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);background:#0d1729;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{background:0;border:0;color:var(--muted);padding:9px 0 10px;font-size:10.5px;font-weight:700;cursor:pointer;display:grid;justify-items:center;gap:3px}
+nav button.on{color:var(--acc)}
+nav i{font-style:normal;font-size:18px;line-height:1}
+.modal{position:fixed;inset:0;z-index:60;background:#000a;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg2);width:100%;max-width:900px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px));border:1px solid var(--line)}
+.sheet h3{margin:2px 0 14px}
+.pill{padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:12.5px;cursor:pointer;font-weight:700;color:var(--muted)}
+.pill.on{background:var(--acc);color:#05230f;border-color:var(--acc)}
+.mini{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:#0f2a1c;border:1px solid #1e7a4d;color:#7ef0b0;padding:10px 16px;border-radius:99px;z-index:99;font-size:13px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:11px;text-transform:uppercase}
+.fab{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:50%;background:var(--acc);color:#05230f;font-size:30px;border:0;box-shadow:0 8px 24px #0008;z-index:35;cursor:pointer}
+.bar{height:8px;background:var(--bg2);border-radius:99px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="logo">TV</div>
+    <div style="flex:1">
+      <h1 id="appName">IPTV Cobranças</h1>
+      <div class="sub" id="appSub">Gestão de clientes e lembretes</div>
+    </div>
+    <button class="btn sec2 sm" onclick="openSearch()">🔍</button>
+  </div>
+</header>
+
+<main>
+  <!-- DASHBOARD -->
+  <section id="v-dash">
+    <div class="grid g4">
+      <div class="card stat"><span>Clientes</span><b id="s-total">0</b></div>
+      <div class="card stat"><span>Ativos</span><b id="s-ativos" style="color:var(--acc)">0</b></div>
+      <div class="card stat"><span>Vencidos</span><b id="s-venc" style="color:var(--dan)">0</b></div>
+      <div class="card stat"><span>Vence 3d</span><b id="s-prox" style="color:var(--warn)">0</b></div>
+    </div>
+    <div class="grid g2" style="margin-top:10px">
+      <div class="card stat"><span>Receita mês</span><b id="s-rec" style="color:var(--acc)">R$ 0</b></div>
+      <div class="card stat"><span>A receber</span><b id="s-arec" style="color:var(--warn)">R$ 0</b></div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <b style="font-size:13px">Taxa de adimplência</b><span class="mini" id="s-adimp">0%</span>
+      </div>
+      <div class="bar" style="margin-top:8px"><i id="s-bar" style="width:0%"></i></div>
+    </div>
+
+    <div class="sec">Ações rápidas</div>
+    <div class="row">
+      <button class="btn sm" onclick="cobrarTodos('vencido')">📢 Cobrar vencidos</button>
+      <button class="btn sec2 sm" onclick="cobrarTodos('hoje')">⏰ Avisar vence hoje</button>
+      <button class="btn sec2 sm" onclick="cobrarTodos('prox')">📅 Avisar próximos</button>
+    </div>
+
+    <div class="sec">Vencimentos próximos</div>
+    <div id="dashList"></div>
+  </section>
+
+  <!-- CLIENTES -->
+  <section id="v-cli" class="hide">
+    <div class="field"><input id="q" placeholder="Buscar por nome, telefone, usuário..." oninput="render()"></div>
+    <div class="row" style="margin-bottom:12px" id="filters"></div>
+    <div id="cliList"></div>
+  </section>
+
+  <!-- FINANCEIRO -->
+  <section id="v-fin" class="hide">
+    <div class="grid g2">
+      <div class="card stat"><span>Recebido (mês)</span><b id="f-mes" style="color:var(--acc)">R$ 0</b></div>
+      <div class="card stat"><span>Recebido (total)</span><b id="f-tot">R$ 0</b></div>
+    </div>
+    <div class="sec">Histórico de pagamentos</div>
+    <div class="card"><table id="fTable"><thead><tr><th>Data</th><th>Cliente</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="sec">Receita por plano</div>
+    <div class="card" id="fPlanos"></div>
+  </section>
+
+  <!-- PLANOS / SERVIDORES -->
+  <section id="v-cfg" class="hide">
+    <div class="sec">Planos</div>
+    <div id="planList"></div>
+    <button class="btn sec2" style="margin-top:8px" onclick="editPlano()">+ Novo plano</button>
+
+    <div class="sec">Servidores / Painéis</div>
+    <div id="srvList"></div>
+    <button class="btn sec2" style="margin-top:8px" onclick="editSrv()">+ Novo servidor</button>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="v-set" class="hide">
+    <div class="sec">Sua empresa</div>
+    <div class="card">
+      <div class="field"><label>Nome do negócio</label><input id="cfgNome"></div>
+      <div class="field"><label>Seu WhatsApp (com DDD)</label><input id="cfgFone" inputmode="tel"></div>
+      <div class="field"><label>Chave PIX</label><input id="cfgPix"></div>
+      <div class="field"><label>Nome do titular do PIX</label><input id="cfgPixNome"></div>
+      <div class="field"><label>DDI padrão</label><input id="cfgDDI" value="55" inputmode="numeric"></div>
+      <button class="btn" onclick="saveCfg()">Salvar</button>
+    </div>
+
+    <div class="sec">Modelos de mensagem</div>
+    <div class="card">
+      <p class="mini" style="margin-top:0">Variáveis: {nome} {plano} {valor} {vencimento} {dias} {usuario} {senha} {pix} {pixnome} {empresa} {servidor} {telas}</p>
+      <div class="field"><label>Lembrete antes do vencimento</label><textarea id="mAntes" rows="5"></textarea></div>
+      <div class="field"><label>Vence hoje</label><textarea id="mHoje" rows="5"></textarea></div>
+      <div class="field"><label>Cobrança de vencido</label><textarea id="mVenc" rows="5"></textarea></div>
+      <div class="field"><label>Confirmação de pagamento / renovação</label><textarea id="mPago" rows="5"></textarea></div>
+      <div class="field"><label>Dados de acesso (boas-vindas)</label><textarea id="mBem" rows="5"></textarea></div>
+      <button class="btn" onclick="saveMsgs()">Salvar modelos</button>
+      <button class="btn sec2" style="margin-top:8px" onclick="resetMsgs()">Restaurar padrão</button>
+    </div>
+
+    <div class="sec">Backup</div>
+    <div class="card">
+      <button class="btn sec2" onclick="exportJSON()">⬇️ Exportar backup (JSON)</button>
+      <button class="btn sec2" style="margin-top:8px" onclick="document.getElementById('imp').click()">⬆️ Importar backup</button>
+      <input type="file" id="imp" accept="application/json" class="hide" onchange="importJSON(event)">
+      <button class="btn sec2" style="margin-top:8px" onclick="exportCSV()">📄 Exportar clientes (CSV)</button>
+      <button class="btn dan" style="margin-top:8px" onclick="wipe()">🗑️ Apagar todos os dados</button>
+    </div>
+    <p class="mini" style="text-align:center;margin:18px 0">Dados salvos no próprio aparelho (offline).</p>
+  </section>
+</main>
+
+<button class="fab" id="fab" onclick="editCli()">+</button>
+
+<nav>
+  <button data-v="dash" class="on" onclick="go('dash')"><i>📊</i>Painel</button>
+  <button data-v="cli" onclick="go('cli')"><i>👥</i>Clientes</button>
+  <button data-v="fin" onclick="go('fin')"><i>💰</i>Financeiro</button>
+  <button data-v="cfg" onclick="go('cfg')"><i>📦</i>Planos</button>
+  <button data-v="set" onclick="go('set')"><i>⚙️</i>Ajustes</button>
+</nav>
+
+<div id="modal"></div>
+
+<script>
+/* ---------------- storage ---------------- */
+var K='iptvcob_v1';
+var DEF_MSGS={
+ antes:"Olá {nome}! 👋\n\nPassando para lembrar que seu plano *{plano}* vence em *{vencimento}* (faltam {dias} dias).\n\n💰 Valor: *{valor}*\n🔑 PIX: {pix}\n👤 Titular: {pixnome}\n\nAssim que pagar, me envie o comprovante que já renovo seu acesso. 😉\n\n_{empresa}_",
+ hoje:"Olá {nome}! ⏰\n\nSeu plano *{plano}* vence *HOJE ({vencimento})*.\n\n💰 Valor: *{valor}*\n🔑 PIX: {pix}\n👤 Titular: {pixnome}\n\nRenove agora e continue assistindo sem interrupção! 📺\n\n_{empresa}_",
+ vencido:"Olá {nome}! ⚠️\n\nSeu plano *{plano}* venceu em *{vencimento}* ({dias} dias em atraso) e o acesso pode ser bloqueado.\n\n💰 Valor: *{valor}*\n🔑 PIX: {pix}\n👤 Titular: {pixnome}\n\nMe envie o comprovante para liberar novamente. 🙏\n\n_{empresa}_",
+ pago:"Pagamento confirmado, {nome}! ✅\n\nSeu plano *{plano}* foi renovado com sucesso.\n📅 Novo vencimento: *{vencimento}*\n\nObrigado pela confiança! 📺🙌\n\n_{empresa}_",
+ bem:"Seja bem-vindo(a), {nome}! 🎉\n\nSeus dados de acesso:\n🖥️ Servidor: {servidor}\n👤 Usuário: {usuario}\n🔒 Senha: {senha}\n📺 Telas: {telas}\n📦 Plano: {plano} — {valor}\n📅 Vencimento: {vencimento}\n\nQualquer dúvida é só chamar aqui! 😉\n\n_{empresa}_"
+};
+var DB=load();
+function load(){
+  try{var d=JSON.parse(localStorage.getItem(K));if(d&&d.clientes)return migr(d);}catch(e){}
+  return {clientes:[],planos:[
+    {id:id(),nome:"Mensal 1 tela",valor:30,dias:30},
+    {id:id(),nome:"Mensal 2 telas",valor:45,dias:30},
+    {id:id(),nome:"Trimestral",valor:80,dias:90}
+  ],servidores:[{id:id(),nome:"Servidor Principal",url:""}],pagamentos:[],
+   cfg:{nome:"Minha Central IPTV",fone:"",pix:"",pixnome:"",ddi:"55"},msgs:JSON.parse(JSON.stringify(DEF_MSGS))};
+}
+function migr(d){d.pagamentos=d.pagamentos||[];d.servidores=d.servidores||[];d.msgs=Object.assign({},DEF_MSGS,d.msgs||{});d.cfg=Object.assign({ddi:"55"},d.cfg||{});return d;}
+function save(){localStorage.setItem(K,JSON.stringify(DB));}
+function id(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36);}
+
+/* ---------------- helpers ---------------- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});}
+function hoje(){var d=new Date();d.setHours(0,0,0,0);return d;}
+function pd(s){if(!s)return null;var p=String(s).split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function fdate(s){var d=pd(s);return d?('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear():'-';}
+function dias(s){var d=pd(s);if(!d)return 0;return Math.round((d-hoje())/86400000);}
+function brl(v){return 'R$ '+(Number(v)||0).toFixed(2).replace('.',',');}
+function addDays(s,n){var d=pd(s)||hoje();d.setDate(d.getDate()+n);return iso(d);}
+function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},2200);}
+function status(c){
+  if(c.ativo===false)return 'inativo';
+  var d=dias(c.venc);
+  if(d<0)return 'vencido'; if(d===0)return 'hoje'; if(d<=3)return 'prox'; return 'ok';
+}
+var STL={ok:['Em dia','t-ok'],prox:['Vence em breve','t-hoje'],hoje:['Vence hoje','t-hoje'],vencido:['Vencido','t-late'],inativo:['Inativo','t-off']};
+function plano(c){for(var i=0;i<DB.planos.length;i++)if(DB.planos[i].id===c.planoId)return DB.planos[i];return {nome:c.planoNome||'—',valor:c.valor||0,dias:30};}
+function srvNome(c){for(var i=0;i<DB.servidores.length;i++)if(DB.servidores[i].id===c.srvId)return DB.servidores[i].nome;return '—';}
+function fone(n){var s=String(n||'').replace(/\D/g,'');if(!s)return '';if(s.length<=11)s=(DB.cfg.ddi||'55')+s;return s;}
+
+/* ---------------- mensagens / whatsapp ---------------- */
+function tpl(t,c){
+  var p=plano(c),d=dias(c.venc);
+  var map={nome:c.nome||'',plano:p.nome,valor:brl(c.valor!=null?c.valor:p.valor),vencimento:fdate(c.venc),
+    dias:String(Math.abs(d)),usuario:c.user||'-',senha:c.senha||'-',pix:DB.cfg.pix||'(configure seu PIX)',
+    pixnome:DB.cfg.pixnome||'',empresa:DB.cfg.nome||'',servidor:srvNome(c),telas:c.telas||'1'};
+  return String(t).replace(/\{(\w+)\}/g,function(m,k){return map[k]!=null?map[k]:m;});
+}
+function waLink(c,txt){return 'https://wa.me/'+fone(c.fone)+'?text='+encodeURIComponent(txt);}
+function autoMsg(c){var s=status(c);if(s==='vencido')return DB.msgs.vencido;if(s==='hoje')return DB.msgs.hoje;return DB.msgs.antes;}
+function whats(cid){
+  var c=find(cid); if(!c)return;
+  if(!fone(c.fone))return toast('Cliente sem telefone');
+  openMsg(c,autoMsg(c));
+}
+function openMsg(c,base){
+  var texto=tpl(base,c);
+  modal('<h3>Mensagem para '+esc(c.nome)+'</h3>'+
+  '<div class="row" style="margin-bottom:10px">'+
+   btnT(c.id,'antes','Lembrete')+btnT(c.id,'hoje','Vence hoje')+btnT(c.id,'vencido','Cobrança')+btnT(c.id,'pago','Pagamento')+btnT(c.id,'bem','Acesso')+
+  '</div>'+
+  '<div class="field"><textarea id="msgBox" rows="11">'+esc(texto)+'</textarea></div>'+
+  '<button class="btn" onclick="sendWA(\''+c.id+'\')">📲 Abrir no WhatsApp</button>'+
+  '<button class="btn sec2" style="margin-top:8px" onclick="copyMsg()">📋 Copiar texto</button>'+
+  '<button class="btn sec2" style="margin-top:8px" onclick="closeModal()">Fechar</button>');
+}
+function btnT(cid,k,l){return '<button class="pill" onclick="setT(\''+cid+'\',\''+k+'\')">'+l+'</button>';}
+function setT(cid,k){var c=find(cid);document.getElementById('msgBox').value=tpl(DB.msgs[k],c);}
+function sendWA(cid){var c=find(cid);var t=document.getElementById('msgBox').value;window.open(waLink(c,t),'_blank');closeModal();}
+function copyMsg(){var b=document.getElementById('msgBox');b.select();try{document.execCommand('copy')}catch(e){}toast('Texto copiado');}
+function cobrarTodos(f){
+  var l=DB.clientes.filter(function(c){return c.ativo!==false&&(f==='prox'?status(c)==='prox':status(c)===f)&&fone(c.fone);});
+  if(!l.length)return toast('Nenhum cliente nessa situação');
+  modal('<h3>Cobrança em lote ('+l.length+')</h3><p class="mini">Toque em cada cliente para abrir a conversa já com a mensagem pronta.</p>'+
+    l.map(function(c){return '<div class="cli"><div class="av">'+ini(c.nome)+'</div><div style="flex:1"><div class="nm">'+esc(c.nome)+'</div><div class="mt">'+fdate(c.venc)+' • '+brl(c.valor)+'</div></div>'+
+    '<button class="wa" onclick="window.open(\''+waLink(c,tpl(autoMsg(c),c)).replace(/'/g,"\\'")+'\',\'_blank\')">'+WAICON+'</button></div>';}).join('')+
+    '<button class="btn sec2" style="margin-top:8px" onclick="closeModal()">Fechar</button>');
+}
+
+/* ---------------- views ---------------- */
+var view='dash',filtro='todos';
+function go(v){view=v;
+  ['dash','cli','fin','cfg','set'].forEach(function(x){document.getElementById('v-'+x).classList.toggle('hide',x!==v);});
+  Array.prototype.forEach.call(document.querySelectorAll('nav button'),function(b){b.classList.toggle('on',b.dataset.v===v);});
+  document.getElementById('fab').classList.toggle('hide',v!=='cli'&&v!=='dash');
+  render();window.scrollTo(0,0);
+}
+function ini(n){return String(n||'?').trim().charAt(0).toUpperCase();}
+var WAICON='<svg viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.2-.7.1s-.8 1-.9 1.2c-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5 0-.2 0-.4 0-.5s-.7-1.6-.9-2.2c-.2-.5-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5 4.4.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2m0 18.2c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2"/></svg>';
+
+function find(i){for(var k=0;k<DB.clientes.length;k++)if(DB.clientes[k].id===i)return DB.clientes[k];return null;}
+
+function render(){
+  var cs=DB.clientes.slice();
+  var t=cs.length,at=0,vc=0,px=0,arec=0,rec=0;
+  cs.forEach(function(c){var s=status(c);if(s==='ok'||s==='prox'||s==='hoje')at++;if(s==='vencido'){vc++;arec+=Number(c.valor)||0;}if(s==='prox'||s==='hoje')px++;});
+  var m=new Date(),mk=m.getFullYear()+'-'+('0'+(m.getMonth()+1)).slice(-2);
+  DB.pagamentos.forEach(function(p){if(String(p.data).slice(0,7)===mk)rec+=Number(p.valor)||0;});
+  set('s-total',t);set('s-ativos',at);set('s-venc',vc);set('s-prox',px);set('s-rec',brl(rec));set('s-arec',brl(arec));
+  var adm=t?Math.round(((t-vc)/t)*100):0;set('s-adimp',adm+'%');document.getElementById('s-bar').style.width=adm+'%';
+
+  // dashboard list
+  var prox=cs.filter(function(c){return c.ativo!==false;}).sort(function(a,b){return (pd(a.venc)||0)-(pd(b.venc)||0);}).slice(0,6);
+  document.getElementById('dashList').innerHTML=prox.length?prox.map(cliHTML).join(''):'<div class="card mini">Nenhum cliente cadastrado ainda. Toque no botão + para começar.</div>';
+
+  // clientes
+  var q=(document.getElementById('q').value||'').toLowerCase();
+  var fl=[['todos','Todos',cs.length],['vencido','Vencidos',cs.filter(function(c){return status(c)==='vencido'}).length],
+    ['hoje','Hoje',cs.filter(function(c){return status(c)==='hoje'}).length],['prox','Próximos',cs.filter(function(c){return status(c)==='prox'}).length],
+    ['ok','Em dia',cs.filter(function(c){return status(c)==='ok'}).length],['inativo','Inativos',cs.filter(function(c){return status(c)==='inativo'}).length]];
+  document.getElementById('filters').innerHTML=fl.map(function(f){return '<button class="pill'+(filtro===f[0]?' on':'')+'" onclick="filtro=\''+f[0]+'\';render()">'+f[1]+' ('+f[2]+')</button>';}).join('');
+  var list=cs.filter(function(c){
+    if(filtro!=='todos'&&status(c)!==filtro)return false;
+    if(!q)return true;
+    return [c.nome,c.fone,c.user,c.obs].join(' ').toLowerCase().indexOf(q)>-1;
+  }).sort(function(a,b){return (pd(a.venc)||0)-(pd(b.venc)||0);});
+  document.getElementById('cliList').innerHTML=list.length?list.map(cliHTML).join(''):'<div class="card mini">Nenhum cliente encontrado.</div>';
+
+  // financeiro
+  var tot=0;DB.pagamentos.forEach(function(p){tot+=Number(p.valor)||0;});
+  set('f-mes',brl(rec));set('f-tot',brl(tot));
+  var tb=document.querySelector('#fTable tbody');
+  var pgs=DB.pagamentos.slice().sort(function(a,b){return a.data<b.data?1:-1}).slice(0,60);
+  tb.innerHTML=pgs.length?pgs.map(function(p){return '<tr><td>'+fdate(p.data)+'</td><td>'+esc(p.nome)+'</td><td>'+brl(p.valor)+'</td><td><button class="btn dan sm" onclick="delPg(\''+p.id+'\')">x</button></td></tr>';}).join(''):'<tr><td colspan="4" class="mini">Nenhum pagamento registrado.</td></tr>';
+  var byP={};DB.clientes.forEach(function(c){if(c.ativo===false)return;var n=plano(c).nome;byP[n]=(byP[n]||0)+(Number(c.valor)||0);});
+  var keys=Object.keys(byP);
+  document.getElementById('fPlanos').innerHTML=keys.length?keys.map(function(k){return '<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span>'+esc(k)+'</span><b>'+brl(byP[k])+'</b></div>';}).join(''):'<span class="mini">Sem dados.</span>';
+
+  // planos / servidores
+  document.getElementById('planList').innerHTML=DB.planos.map(function(p){return '<div class="cli"><div style="flex:1"><div class="nm">'+esc(p.nome)+'</div><div class="mt">'+brl(p.valor)+' • '+p.dias+' dias</div></div><button class="btn sec2 sm" onclick="editPlano(\''+p.id+'\')">Editar</button><button class="btn dan sm" onclick="delPlano(\''+p.id+'\')">x</button></div>';}).join('')||'<div class="card mini">Nenhum plano.</div>';
+  document.getElementById('srvList').innerHTML=DB.servidores.map(function(s){return '<div class="cli"><div style="flex:1"><div class="nm">'+esc(s.nome)+'</div><div class="mt">'+esc(s.url||'sem URL')+'</div></div><button class="btn sec2 sm" onclick="editSrv(\''+s.id+'\')">Editar</button><button class="btn dan sm" onclick="delSrv(\''+s.id+'\')">x</button></div>';}).join('')||'<div class="card mini">Nenhum servidor.</div>';
+}
+function set(i,v){document.getElementById(i).textContent=v;}
+function cliHTML(c){
+  var s=status(c),st=STL[s],d=dias(c.venc);
+  var info=s==='vencido'?('Venceu há '+Math.abs(d)+' dia(s)'):s==='hoje'?'Vence hoje':s==='inativo'?'Inativo':('Vence em '+d+' dia(s)');
+  return '<div class="cli">'+
+   '<div class="av" onclick="detalhe(\''+c.id+'\')">'+ini(c.nome)+'</div>'+
+   '<div style="flex:1;min-width:0" onclick="detalhe(\''+c.id+'\')">'+
+     '<div class="nm">'+esc(c.nome)+'</div>'+
+     '<div class="mt">'+esc(plano(c).nome)+' • '+brl(c.valor)+'</div>'+
+     '<div class="mt">'+fdate(c.venc)+' — '+info+'</div>'+
+     '<div style="margin-top:5px"><span class="tag '+st[1]+'">'+st[0]+'</span></div>'+
+   '</div>'+
+   '<button class="wa" title="WhatsApp" onclick="whats(\''+c.id+'\')">'+WAICON+'</button></div>';
+}
+
+/* ---------------- detalhe ---------------- */
+function detalhe(cid){
+  var c=find(cid),p=plano(c),st=STL[status(c)];
+  modal('<h3>'+esc(c.nome)+' <span class="tag '+st[1]+'">'+st[0]+'</span></h3>'+
+  '<div class="card" style="margin-bottom:10px">'+
+   li('Telefone',c.fone||'-')+li('Plano',p.nome)+li('Valor',brl(c.valor))+li('Vencimento',fdate(c.venc))+
+   li('Servidor',srvNome(c))+li('Usuário',c.user||'-')+li('Senha',c.senha||'-')+li('Telas',c.telas||'1')+
+   li('Aplicativo',c.app||'-')+li('MAC / Device',c.mac||'-')+li('Observações',c.obs||'-')+
+  '</div>'+
+  '<button class="btn" onclick="whats(\''+c.id+'\')">📲 Cobrar no WhatsApp</button>'+
+  '<div class="row" style="margin-top:8px">'+
+   '<button class="btn sec2 sm" style="flex:1" onclick="renovar(\''+c.id+'\')">✅ Registrar pagamento / renovar</button></div>'+
+  '<div class="row" style="margin-top:8px">'+
+   '<button class="btn sec2 sm" style="flex:1" onclick="closeModal();openMsg(find(\''+c.id+'\'),DB.msgs.bem)">🔑 Enviar acesso</button>'+
+   '<button class="btn sec2 sm" style="flex:1" onclick="toggleAtivo(\''+c.id+'\')">'+(c.ativo===false?'Reativar':'Desativar')+'</button></div>'+
+  '<div class="row" style="margin-top:8px">'+
+   '<button class="btn sec2 sm" style="flex:1" onclick="closeModal();editCli(\''+c.id+'\')">✏️ Editar</button>'+
+   '<button class="btn dan sm" style="flex:1" onclick="delCli(\''+c.id+'\')">🗑️ Excluir</button></div>'+
+  '<button class="btn sec2" style="margin-top:10px" onclick="closeModal()">Fechar</button>');
+}
+function li(k,v){return '<div class="row" style="justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)"><span class="mini">'+k+'</span><span style="text-align:right;word-break:break-word">'+esc(v)+'</span></div>';}
+
+function renovar(cid){
+  var c=find(cid),p=plano(c);
+  c.venc=addDays(dias(c.venc)<0?iso(hoje()):c.venc,p.dias||30);
+  c.ativo=true;
+  DB.pagamentos.push({id:id(),cliId:c.id,nome:c.nome,valor:Number(c.valor)||0,data:iso(hoje())});
+  save();closeModal();render();toast('Renovado até '+fdate(c.venc));
+  openMsg(c,DB.msgs.pago);
+}
+function toggleAtivo(cid){var c=find(cid);c.ativo=c.ativo===false;save();closeModal();render();toast(c.ativo===false?'Cliente desativado':'Cliente reativado');}
+function delCli(cid){if(!confirm('Excluir este cliente?'))return;DB.clientes=DB.clientes.filter(function(c){return c.id!==cid});save();closeModal();render();toast('Cliente excluído');}
+function delPg(i){DB.pagamentos=DB.pagamentos.filter(function(p){return p.id!==i});save();render();}
+
+/* ---------------- formulário cliente ---------------- */
+function editCli(cid){
+  var c=cid?find(cid):{id:'',nome:'',fone:'',planoId:(DB.planos[0]||{}).id,valor:(DB.planos[0]||{}).valor,venc:addDays(iso(hoje()),30),user:'',senha:'',telas:'1',app:'',mac:'',srvId:(DB.servidores[0]||{}).id,obs:'',ativo:true};
+  modal('<h3>'+(cid?'Editar cliente':'Novo cliente')+'</h3>'+
+   f('Nome *','fNome',c.nome)+f('WhatsApp (DDD + número) *','fFone',c.fone,'tel')+
+   '<div class="field"><label>Plano</label><select id="fPlano" onchange="planoChg()">'+DB.planos.map(function(p){return '<option value="'+p.id+'"'+(p.id===c.planoId?' selected':'')+'>'+esc(p.nome)+' — '+brl(p.valor)+'</option>';}).join('')+'</select></div>'+
+   f('Valor cobrado (R$)','fValor',c.valor,'decimal')+
+   '<div class="field"><label>Vencimento</label><input type="date" id="fVenc" value="'+(c.venc||'')+'"></div>'+
+   '<div class="field"><label>Servidor</label><select id="fSrv">'+DB.servidores.map(function(s){return '<option value="'+s.id+'"'+(s.id===c.srvId?' selected':'')+'>'+esc(s.nome)+'</option>';}).join('')+'</select></div>'+
+   f('Usuário','fUser',c.user)+f('Senha','fSenha',c.senha)+f('Telas','fTelas',c.telas)+f('Aplicativo (IBO, Smarters...)','fApp',c.app)+f('MAC / Device','fMac',c.mac)+
+   '<div class="field"><label>Observações</label><textarea id="fObs" rows="3">'+esc(c.obs||'')+'</textarea></div>'+
+   '<button class="btn" onclick="saveCli(\''+(cid||'')+'\')">Salvar</button>'+
+   '<button class="btn sec2" style="margin-top:8px" onclick="closeModal()">Cancelar</button>');
+}
+function f(l,i,v,m){return '<div class="field"><label>'+l+'</label><input id="'+i+'" value="'+esc(v==null?'':v)+'"'+(m?' inputmode="'+m+'"':'')+'></div>';}
+function planoChg(){var pid=document.getElementById('fPlano').value;for(var i=0;i<DB.planos.length;i++)if(DB.planos[i].id===pid){document.getElementById('fValor').value=DB.planos[i].valor;
+  var v=document.getElementById('fVenc');if(!v.value)v.value=addDays(iso(hoje()),DB.planos[i].dias);}}
+function saveCli(cid){
+  var nome=val('fNome').trim();if(!nome)return toast('Informe o nome');
+  var c=cid?find(cid):{id:id(),ativo:true};
+  c.nome=nome;c.fone=val('fFone');c.planoId=val('fPlano');c.valor=parseFloat(String(val('fValor')).replace(',','.'))||0;
+  c.venc=val('fVenc')||iso(hoje());c.srvId=val('fSrv');c.user=val('fUser');c.senha=val('fSenha');c.telas=val('fTelas');
+  c.app=val('fApp');c.mac=val('fMac');c.obs=val('fObs');
+  if(!cid)DB.clientes.push(c);
+  save();closeModal();render();toast('Cliente salvo');
+}
+function val(i){var e=document.getElementById(i);return e?e.value:'';}
+
+/* ---------------- planos / servidores ---------------- */
+function editPlano(pid){
+  var p=pid?DB.planos.filter(function(x){return x.id===pid})[0]:{nome:'',valor:'',dias:30};
+  modal('<h3>'+(pid?'Editar plano':'Novo plano')+'</h3>'+f('Nome','pNome',p.nome)+f('Valor (R$)','pValor',p.valor,'decimal')+f('Duração (dias)','pDias',p.dias,'numeric')+
+   '<button class="btn" onclick="savePlano(\''+(pid||'')+'\')">Salvar</button><button class="btn sec2" style="margin-top:8px" onclick="closeModal()">Cancelar</button>');
+}
+function savePlano(pid){
+  var n=val('pNome').trim();if(!n)return toast('Informe o nome');
+  var p=pid?DB.planos.filter(function(x){return x.id===pid})[0]:{id:id()};
+  p.nome=n;p.valor=parseFloat(String(val('pValor')).replace(',','.'))||0;p.dias=parseInt(val('pDias'))||30;
+  if(!pid)DB.planos.push(p);save();closeModal();render();toast('Plano salvo');
+}
+function delPlano(pid){if(!confirm('Excluir plano?'))return;DB.planos=DB.planos.filter(function(p){return p.id!==pid});save();render();}
+function editSrv(sid){
+  var s=sid?DB.servidores.filter(function(x){return x.id===sid})[0]:{nome:'',url:''};
+  modal('<h3>'+(sid?'Editar servidor':'Novo servidor')+'</h3>'+f('Nome','sNome',s.nome)+f('URL / painel','sUrl',s.url)+
+   '<button class="btn" onclick="saveSrv(\''+(sid||'')+'\')">Salvar</button><button class="btn sec2" style="margin-top:8px" onclick="closeModal()">Cancelar</button>');
+}
+function saveSrv(sid){
+  var n=val('sNome').trim();if(!n)return toast('Informe o nome');
+  var s=sid?DB.servidores.filter(function(x){return x.id===sid})[0]:{id:id()};
+  s.nome=n;s.url=val('sUrl');if(!sid)DB.servidores.push(s);save();closeModal();render();toast('Servidor salvo');
+}
+function delSrv(sid){if(!confirm('Excluir servidor?'))return;DB.servidores=DB.servidores.filter(function(s){return s.id!==sid});save();render();}
+
+/* ---------------- config ---------------- */
+function fillCfg(){
+  document.getElementById('cfgNome').value=DB.cfg.nome||'';document.getElementById('cfgFone').value=DB.cfg.fone||'';
+  document.getElementById('cfgPix').value=DB.cfg.pix||'';document.getElementById('cfgPixNome').value=DB.cfg.pixnome||'';
+  document.getElementById('cfgDDI').value=DB.cfg.ddi||'55';
+  document.getElementById('mAntes').value=DB.msgs.antes;document.getElementById('mHoje').value=DB.msgs.hoje;
+  document.getElementById('mVenc').value=DB.msgs.vencido;document.getElementById('mPago').value=DB.msgs.pago;document.getElementById('mBem').value=DB.msgs.bem;
+  document.getElementById('appName').textContent=DB.cfg.nome||'IPTV Cobranças';
+}
+function saveCfg(){DB.cfg={nome:val('cfgNome'),fone:val('cfgFone'),pix:val('cfgPix'),pixnome:val('cfgPixNome'),ddi:val('cfgDDI')||'55'};save();fillCfg();toast('Dados salvos');}
+function saveMsgs(){DB.msgs={antes:val('mAntes'),hoje:val('mHoje'),vencido:val('mVenc'),pago:val('mPago'),bem:val('mBem')};save();toast('Modelos salvos');}
+function resetMsgs(){DB.msgs=JSON.parse(JSON.stringify(DEF_MSGS));save();fillCfg();toast('Modelos restaurados');}
+function exportJSON(){dl('backup-iptv-'+iso(hoje())+'.json',JSON.stringify(DB,null,2),'application/json');}
+function exportCSV(){
+  var h='Nome;Telefone;Plano;Valor;Vencimento;Usuario;Senha;Telas;Servidor;Status\n';
+  var b=DB.clientes.map(function(c){return [c.nome,c.fone,plano(c).nome,c.valor,fdate(c.venc),c.user,c.senha,c.telas,srvNome(c),STL[status(c)][0]].join(';');}).join('\n');
+  dl('clientes-iptv.csv','\ufeff'+h+b,'text/csv');
+}
+function dl(n,c,t){var b=new Blob([c],{type:t}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click();URL.revokeObjectURL(a.href);}
+function importJSON(e){
+  var f=e.target.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){try{var d=JSON.parse(r.result);if(!d.clientes)throw 0;DB=migr(d);save();fillCfg();render();toast('Backup importado');}catch(x){toast('Arquivo inválido');}};
+  r.readAsText(f);e.target.value='';
+}
+function wipe(){if(!confirm('Apagar TODOS os dados? Não há como desfazer.'))return;localStorage.removeItem(K);DB=load();save();fillCfg();render();toast('Dados apagados');}
+
+/* ---------------- modal ---------------- */
+function modal(html){document.getElementById('modal').innerHTML='<div class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet">'+html+'</div></div>';}
+function closeModal(){document.getElementById('modal').innerHTML='';}
+function openSearch(){go('cli');setTimeout(function(){document.getElementById('q').focus()},80);}
+
+fillCfg();render();go('dash');
+</script>
+</body>
+</html>
 
