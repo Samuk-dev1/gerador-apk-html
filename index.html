@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>IPTV Manager Pro - Mobile</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js 4.4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ========= SIDEBAR MOBILE FIRST ========= */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 260px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            z-index: 1100;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease-in-out;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header i {
+            font-size: 1.8rem;
+            color: #38bdf8;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .sidebar nav ul li {
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .sidebar nav ul li i {
+            width: 28px;
+            font-size: 1.2rem;
+        }
+
+        .sidebar nav ul li:hover, .sidebar nav ul li.active {
+            background: #2d3a5e;
+            color: white;
+            border-left: 4px solid #38bdf8;
+        }
+
+        /* Main content - sempre ocupando 100% */
+        .main-content {
+            width: 100%;
+            min-height: 100vh;
+            padding: 16px;
+            transition: margin-left 0s;
+        }
+
+        /* Top bar com hambúrguer */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 12px 18px;
+            border-radius: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            position: sticky;
+            top: 8px;
+            z-index: 100;
+        }
+
+        .hamburger {
+            font-size: 1.8rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #0f172a;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 30px;
+            background: #f1f5f9;
+        }
+
+        .hamburger:active {
+            background: #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* Cards grid responsivo */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 16px 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: 0.1s;
+        }
+
+        .card:active {
+            transform: scale(0.97);
+            background: #f8fafc;
+        }
+
+        .card h3 {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .card .value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        /* Busca e botoes em linha adaptável */
+        .flex-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 16px 0;
+            align-items: center;
+        }
+
+        .search-bar {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 28px;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        button {
+            background: #eef2ff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.1s;
+        }
+
+        button.primary {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        button.danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Tabela com scroll horizontal */
+        .table-wrapper {
+            background: white;
+            border-radius: 24px;
+            overflow-x: auto;
+            padding: 4px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            min-width: 560px;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+
+        .status-ativo {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 4px 8px;
+            border-radius: 40px;
+            font-weight: bold;
+            display: inline-block;
+            font-size: 0.7rem;
+        }
+
+        .status-vencido {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 4px 8px;
+            border-radius: 40px;
+        }
+
+        .row-vencido {
+            background-color: #fff0f0;
+        }
+
+        .row-proximo {
+            background-color: #fff9db;
+        }
+
+        /* Modal responsivo */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 32px;
+            padding: 24px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            background: white;
+            border-radius: 20px;
+            padding: 8px;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 24px 32px;
+            }
+            .sidebar {
+                transform: translateX(0);
+            }
+            .hamburger {
+                display: none;
+            }
+            table {
+                font-size: 0.85rem;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card .value {
+                font-size: 1.3rem;
+            }
+            button {
+                padding: 8px 14px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <i class="fas fa-tv"></i> <span>IPTV Manager</span>
+    </div>
+    <nav>
+        <ul>
+            <li data-tab="dashboard" class="active"><i class="fas fa-chart-line"></i> Dashboard</li>
+            <li data-tab="planos"><i class="fas fa-tags"></i> Planos</li>
+            <li data-tab="lembretes"><i class="fas fa-bell"></i> Lembretes</li>
+            <li data-tab="configuracoes"><i class="fas fa-sliders-h"></i> Configurações</li>
+            <li data-tab="backup"><i class="fas fa-database"></i> Backup/Restore</li>
+        </ul>
+    </nav>
+</div>
+<div class="main-content" id="mainContent">
+    <div class="top-bar">
+        <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+        <h2 id="pageTitle">Dashboard</h2>
+    </div>
+    <div id="tabContents">
+        <!-- DASHBOARD -->
+        <div id="dashboardTab" class="tab-pane active-tab">
+            <div class="cards-grid" id="cardsGrid"></div>
+            <div class="flex-btns">
+                <button id="addClientBtn" class="primary"><i class="fas fa-user-plus"></i> Cliente</button>
+                <button id="renewSelectedBtn" class="primary"><i class="fas fa-sync-alt"></i> Renovar Selecionados</button>
+                <input type="text" id="searchInput" placeholder="🔍 Buscar cliente..." style="flex:1; min-width: 140px;">
+            </div>
+            <div class="table-wrapper">
+                <table id="clientTable">
+                    <thead><tr><th><input type="checkbox" id="selectAllCheckbox"></th><th>Nome</th><th>Usuário</th><th>Plano</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody id="clientTableBody"></tbody>
+                </table>
+            </div>
+            <canvas id="pieChart" width="400" height="200" style="max-height: 260px;"></canvas>
+            <canvas id="barChart" width="400" height="200" style="max-height: 260px;"></canvas>
+        </div>
+        <!-- PLANOS -->
+        <div id="planosTab" class="tab-pane" style="display:none;">
+            <button id="addPlanoBtn" class="primary"><i class="fas fa-plus"></i> Adicionar Plano</button>
+            <div class="table-wrapper"><table id="planosTable"><thead><tr><th>Nome</th><th>Valor (R$)</th><th>Ações</th></tr></thead><tbody id="planosTableBody"></tbody></table></div>
+        </div>
+        <!-- LEMBRETES -->
+        <div id="lembretesTab" class="tab-pane" style="display:none;">
+            <div class="flex-btns"><button id="sendAllRemindersBtn" class="primary"><i class="fab fa-whatsapp"></i> Enviar Todos</button></div>
+            <div id="remindersList" class="table-wrapper"></div>
+        </div>
+        <!-- CONFIG -->
+        <div id="configuracoesTab" class="tab-pane" style="display:none;">
+            <h3 style="margin-bottom: 12px;">Templates de Lembretes</h3>
+            <label>5 dias antes:</label><textarea id="temp5dias" rows="2"></textarea>
+            <label>2 dias antes:</label><textarea id="temp2dias" rows="2"></textarea>
+            <label>Vence hoje:</label><textarea id="tempHoje" rows="2"></textarea>
+            <label>WhatsApp Manual (padrão):</label><textarea id="tempWhatsManual" rows="2"></textarea>
+            <button id="saveTemplatesBtn" class="primary" style="margin-top: 12px;">Salvar Templates</button>
+        </div>
+        <!-- BACKUP -->
+        <div id="backupTab" class="tab-pane" style="display:none;">
+            <button id="exportBackupBtn" class="primary"><i class="fas fa-download"></i> Exportar Backup (XLSX)</button>
+            <div style="margin-top: 20px;"><input type="file" id="restoreFileInput" accept=".xlsx, .xls"><button id="importRestoreBtn" class="primary" style="margin-top: 12px;">Restaurar Backup</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div id="clientModal" class="modal"><div class="modal-content"><h3 id="modalClientTitle">Cliente</h3><input type="hidden" id="clientId"><input type="text" id="clientNome" placeholder="Nome completo"><input type="text" id="clientUsuario" placeholder="Usuário"><select id="clientPlanoId"></select><input type="date" id="clientVencimento"><input type="text" id="clientTelefone" placeholder="WhatsApp (código país + número)"><div class="flex-btns"><button id="saveClientBtn">Salvar</button><button id="closeClientModal">Cancelar</button></div></div></div>
+<!-- MODAL WHATSAPP -->
+<div id="whatsModal" class="modal"><div class="modal-content"><h3>Enviar WhatsApp</h3><p><strong>Cliente: </strong><span id="whatsNome"></span></p><label>Mensagem:</label><textarea id="whatsMsg" rows="4"></textarea><div class="flex-btns"><button id="sendWhatsBtn">Enviar via WhatsApp</button><button id="closeWhatsModal">Fechar</button></div></div></div>
+
+<script>
+    // ---------- DADOS GLOBAIS ----------
+    let clients = [];
+    let plans = [];
+    let templates = {
+        lembrete5dias: "Olá {{nome}}, faltam 5 dias para seu plano IPTV vencer. Renove já!",
+        lembrete2dias: "{{nome}}, faltam 2 dias! Não perca seu acesso.",
+        lembreteHoje: "{{nome}}, seu plano vence HOJE! Renove urgentemente.",
+        whatsappManual: "Olá {{nome}}, seu plano de IPTV está em dia? Caso queira renovar, estamos à disposição!"
+    };
+    let currentFilter = "all";
+    let searchTerm = "";
+    let pieChartInstance = null, barChartInstance = null;
+
+    // helpers
+    function normalizeDate(dateStr) { return new Date(dateStr + "T00:00:00"); }
+    function today() { const d = new Date(); d.setHours(0,0,0,0); return d; }
+    function daysUntil(dueStr) { const due = normalizeDate(dueStr); const todayDate = today(); return Math.ceil((due - todayDate) / (1000*3600*24)); }
+    function addOneMonthCalendar(dateStr) {
+        let date = new Date(dateStr + "T12:00:00");
+        let year = date.getFullYear(), month = date.getMonth(), day = date.getDate();
+        let newMonth = month + 1, newYear = year;
+        if (newMonth > 11) { newYear++; newMonth -= 12; }
+        let daysInTarget = new Date(newYear, newMonth + 1, 0).getDate();
+        let newDay = Math.min(day, daysInTarget);
+        let newDate = new Date(newYear, newMonth, newDay);
+        return newDate.toISOString().split('T')[0];
+    }
+    function getPlanById(id) { return plans.find(p => p.id == id) || plans[0]; }
+    function computeStatus(vencimento) { return daysUntil(vencimento) < 0 ? "Vencido" : "Ativo"; }
+    function activeClients() { return clients.filter(c => computeStatus(c.vencimento) === "Ativo"); }
+    function monthlyRevenue() { return activeClients().reduce((sum, c) => sum + (getPlanById(c.planoId)?.valor || 0), 0); }
+
+    function saveToLocal() {
+        localStorage.setItem("iptv_clients", JSON.stringify(clients));
+        localStorage.setItem("iptv_plans", JSON.stringify(plans));
+        localStorage.setItem("iptv_templates", JSON.stringify(templates));
+    }
+    function loadFromLocal() {
+        const storedClients = localStorage.getItem("iptv_clients");
+        const storedPlans = localStorage.getItem("iptv_plans");
+        const storedTemplates = localStorage.getItem("iptv_templates");
+        if(storedPlans) plans = JSON.parse(storedPlans);
+        else plans = [{id:1, nome:"Básico", valor:29.9},{id:2, nome:"HD Plus", valor:49.9},{id:3, nome:"Premium 4K", valor:79.9}];
+        if(storedClients) clients = JSON.parse(storedClients);
+        else {
+            const todayDate = new Date().toISOString().split('T')[0];
+            const plus5 = new Date(); plus5.setDate(plus5.getDate()+5); const d5 = plus5.toISOString().split('T')[0];
+            const plus2 = new Date(); plus2.setDate(plus2.getDate()+2); const d2 = plus2.toISOString().split('T')[0];
+            const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1); const dy = yesterday.toISOString().split('T')[0];
+            clients = [
+                {id:1, nome:"João Silva", usuario:"joao.silva", telefone:"5511999991111", planoId:1, vencimento:d5, createdAt:"2025-12-01"},
+                {id:2, nome:"Maria Oliveira", usuario:"maria.o", telefone:"5511988882222", planoId:2, vencimento:d2, createdAt:"2026-01-10"},
+                {id:3, nome:"Carlos Souza", usuario:"carlosdev", telefone:"5511977773333", planoId:3, vencimento:todayDate, createdAt:"2026-02-15"},
+                {id:4, nome:"Ana Costa", usuario:"anac", telefone:"5511966664444", planoId:1, vencimento:dy, createdAt:"2026-01-20"}
+            ];
+        }
+        if(storedTemplates) templates = JSON.parse(storedTemplates);
+        else templates = { lembrete5dias: "Olá {{nome}}, faltam 5 dias para seu plano IPTV vencer. Renove já!", lembrete2dias: "{{nome}}, faltam 2 dias! Não perca seu acesso.", lembreteHoje: "{{nome}}, seu plano vence HOJE! Renove urgentemente.", whatsappManual: "Olá {{nome}}, seu plano de IPTV está em dia? Caso queira renovar, estamos à disposição!" };
+        if(plans.length===0) plans.push({id:Date.now(), nome:"Básico", valor:29.9});
+        saveToLocal();
+    }
+    function ensureMinPlan() { if(plans.length===0) plans.push({id:Date.now(), nome:"Padrão", valor:29.9}); saveToLocal(); renderPlanos(); }
+    function migrateClientsOnPlanDelete(deletedPlanId) { const firstPlanId = plans[0]?.id; if(!firstPlanId) return; clients.forEach(c => { if(c.planoId == deletedPlanId) c.planoId = firstPlanId; }); saveToLocal(); }
+
+    // Renders
+    function renderDashboard() {
+        const total = clients.length, ativos = activeClients().length, vencidos = total-ativos, receita = monthlyRevenue();
+        document.getElementById("cardsGrid").innerHTML = `
+            <div class="card" data-filter="all"><h3>Total Clientes</h3><div class="value">${total}</div></div>
+            <div class="card" data-filter="ativos"><h3>Ativos</h3><div class="value">${ativos}</div></div>
+            <div class="card" data-filter="vencidos"><h3>Vencidos</h3><div class="value">${vencidos}</div></div>
+            <div class="card" data-filter="receita"><h3>Receita Mensal</h3><div class="value">R$ ${receita.toFixed(2)}</div></div>`;
+        document.querySelectorAll('.card').forEach(card => card.addEventListener('click', (e) => { 
+            const filter = card.getAttribute('data-filter');
+            if(filter==='ativos') currentFilter='ativos';
+            else if(filter==='vencidos') currentFilter='vencidos';
+            else currentFilter='all';
+            renderClientTable();
+            renderCharts();
+        }));
+        renderClientTable();
+        renderCharts();
+    }
+
+    function renderClientTable() {
+        let filtered = [...clients];
+        if(currentFilter === 'ativos') filtered = filtered.filter(c => computeStatus(c.vencimento) === "Ativo");
+        else if(currentFilter === 'vencidos') filtered = filtered.filter(c => computeStatus(c.vencimento) === "Vencido");
+        if(searchTerm) { const term = searchTerm.toLowerCase(); filtered = filtered.filter(c => c.nome.toLowerCase().includes(term) || c.usuario.toLowerCase().includes(term) || getPlanById(c.planoId)?.nome.toLowerCase().includes(term)); }
+        filtered.sort((a,b)=> new Date(a.vencimento) - new Date(b.vencimento));
+        const tbody = document.getElementById("clientTableBody");
+        tbody.innerHTML = "";
+        filtered.forEach(client => {
+            const plan = getPlanById(client.planoId);
+            const status = computeStatus(client.vencimento);
+            const dueDays = daysUntil(client.vencimento);
+            let rowClass = "";
+            if(status === "Vencido") rowClass = "row-vencido";
+            else if(dueDays <= 7 && dueDays >=0) rowClass = "row-proximo";
+            const vencFormat = new Date(client.vencimento).toLocaleDateString('pt-BR');
+            tbody.innerHTML += `<tr class="${rowClass}">
+                <td><input type="checkbox" class="clientCheckbox" data-id="${client.id}"></td>
+                <td>${client.nome}</td><td>${client.usuario}</td><td>${plan.nome}</td>
+                <td>${vencFormat}</td>
+                <td><span class="${status==='Ativo'?'status-ativo':'status-vencido'}">${status}</span></td>
+                <td><button class="editClient" data-id="${client.id}"><i class="fas fa-edit"></i></button>
+                <button class="deleteClient" data-id="${client.id}"><i class="fas fa-trash"></i></button>
+                <button class="renewClient" data-id="${client.id}"><i class="fas fa-calendar-plus"></i></button>
+                <button class="whatsClient" data-id="${client.id}"><i class="fab fa-whatsapp"></i></button></td>
+            </tr>`;
+        });
+        document.querySelectorAll('.editClient').forEach(btn => btn.addEventListener('click', (e) => openClientModal(parseInt(btn.dataset.id))));
+        document.querySelectorAll('.deleteClient').forEach(btn => btn.addEventListener('click', (e) => { if(confirm("Excluir cliente?")) { clients = clients.filter(c => c.id != btn.dataset.id); saveToLocal(); refreshAll(); } }));
+        document.querySelectorAll('.renewClient').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); const idx = clients.findIndex(c=>c.id===id); if(idx!==-1) { clients[idx].vencimento = addOneMonthCalendar(clients[idx].vencimento); saveToLocal(); refreshAll(); } }));
+        document.querySelectorAll('.whatsClient').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); const c = clients.find(c=>c.id===id); openWhatsAppModal(c); }));
+        const selectAll = document.getElementById("selectAllCheckbox");
+        if(selectAll) selectAll.onclick = (e) => { document.querySelectorAll('.clientCheckbox').forEach(cb => cb.checked = e.target.checked); };
+    }
+
+    function renderCharts() {
+        const planLabels = plans.map(p=>p.nome);
+        const planCounts = plans.map(p => clients.filter(c=>c.planoId===p.id).length);
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        if(pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(ctxPie, { type: 'pie', data: { labels: planLabels, datasets: [{ data: planCounts, backgroundColor: ['#3b82f6','#f97316','#10b981','#8b5cf6'] }] } });
+        const last6Months = [];
+        const now = new Date(); for(let i=5;i>=0;i--) { const d = new Date(now.getFullYear(), now.getMonth()-i,1); last6Months.push(d.toLocaleString('pt-BR',{month:'short'})); }
+        const counts = new Array(6).fill(0);
+        clients.forEach(c=>{ if(c.createdAt){ const m = new Date(c.createdAt).getMonth(); const y = new Date(c.createdAt).getFullYear(); const nowY = now.getFullYear(); const nowM = now.getMonth(); for(let i=0;i<6;i++){ const target = new Date(nowY, nowM-i,1); if(target.getMonth()===m && target.getFullYear()===y) counts[5-i]++; } } });
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        if(barChartInstance) barChartInstance.destroy();
+        barChartInstance = new Chart(ctxBar, { type: 'bar', data: { labels: last6Months.reverse(), datasets: [{ label: 'Novos clientes', data: counts.reverse(), backgroundColor: '#3b82f6' }] } });
+    }
+
+    function renderPlanos() {
+        const tbody = document.getElementById("planosTableBody"); if(!tbody) return;
+        tbody.innerHTML = "";
+        plans.forEach(p => { tbody.innerHTML += `<tr><td>${p.nome}</td><td>R$ ${p.valor.toFixed(2)}</td><td><button class="editPlano" data-id="${p.id}">Editar</button> <button class="deletePlano" data-id="${p.id}">Excluir</button></td></tr>`; });
+        document.querySelectorAll('.editPlano').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); const plano = plans.find(p=>p.id===id); const novoNome = prompt("Nome:", plano.nome); if(novoNome) plano.nome = novoNome; const novoValor = prompt("Valor R$:", plano.valor); if(novoValor) plano.valor = parseFloat(novoValor); saveToLocal(); renderPlanos(); refreshAll(); }));
+        document.querySelectorAll('.deletePlano').forEach(btn => btn.addEventListener('click', (e) => { if(plans.length<=1) { alert("Mínimo 1 plano."); return; } const id = parseInt(btn.dataset.id); migrateClientsOnPlanDelete(id); plans = plans.filter(p=>p.id!==id); saveToLocal(); renderPlanos(); refreshAll(); }));
+    }
+
+    function renderLembretesProgramados() {
+        const container = document.getElementById("remindersList"); if(!container) return;
+        const filtered = clients.filter(c => [5,2,0].includes(daysUntil(c.vencimento)));
+        if(filtered.length===0) { container.innerHTML = "<div style='padding:20px;text-align:center'>Nenhum lembrete pendente.</div>"; return; }
+        let html = `<table><thead><tr><th>Cliente</th><th>Vencimento</th><th>Dias</th><th>Ação</th></tr></thead><tbody>`;
+        filtered.forEach(c => { const diff = daysUntil(c.vencimento); let template = diff===5?templates.lembrete5dias: diff===2?templates.lembrete2dias:templates.lembreteHoje; let msg = template.replace(/{{nome}}/g, c.nome).substring(0,50);
+            html += `<tr><td>${c.nome}</td><td>${new Date(c.vencimento).toLocaleDateString()}</td><td>${diff===0?"Hoje":diff+"d"}</td><td><button class="sendReminderBtn" data-id="${c.id}" data-diff="${diff}"><i class="fab fa-whatsapp"></i> Enviar</button></td></tr>`;
+        });
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+        document.querySelectorAll('.sendReminderBtn').forEach(btn => btn.addEventListener('click', (e) => { const cid = parseInt(btn.dataset.id); const client = clients.find(c=>c.id===cid); const diff = daysUntil(client.vencimento); let tpl = diff===5?templates.lembrete5dias: diff===2?templates.lembrete2dias:templates.lembreteHoje; let msg = tpl.replace(/{{nome}}/g, client.nome); if(client.telefone) window.open(`https://wa.me/${client.telefone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank'); else alert("Telefone não cadastrado"); }));
+    }
+
+    async function sendAllReminders() { const toSend = clients.filter(c => [5,2,0].includes(daysUntil(c.vencimento))); if(toSend.length===0) return alert("Nenhum lembrete pendente."); if(confirm(`Enviar ${toSend.length} lembretes?`)) { for(const c of toSend) { let tpl = daysUntil(c.vencimento)===5?templates.lembrete5dias: daysUntil(c.vencimento)===2?templates.lembrete2dias:templates.lembreteHoje; let msg = tpl.replace(/{{nome}}/g, c.nome); if(c.telefone) window.open(`https://wa.me/${c.telefone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank'); await new Promise(r=>setTimeout(r,400)); } } }
+
+    function openClientModal(id=null) { const modal = document.getElementById("clientModal"); document.getElementById("modalClientTitle").innerText = id?"Editar Cliente":"Novo Cliente"; if(id){ const c = clients.find(c=>c.id===id); document.getElementById("clientId").value=c.id; document.getElementById("clientNome").value=c.nome; document.getElementById("clientUsuario").value=c.usuario; document.getElementById("clientVencimento").value=c.vencimento; document.getElementById("clientTelefone").value=c.telefone||""; } else { document.getElementById("clientId").value=""; document.getElementById("clientNome").value=""; document.getElementById("clientUsuario").value=""; document.getElementById("clientVencimento").value=""; document.getElementById("clientTelefone").value=""; }
+        const planoSelect = document.getElementById("clientPlanoId"); planoSelect.innerHTML = ""; plans.forEach(p => { const opt = document.createElement("option"); opt.value = p.id; opt.innerText = `${p.nome} - R$ ${p.valor}`; if(id && clients.find(c=>c.id===id)?.planoId===p.id) opt.selected=true; planoSelect.appendChild(opt); });
+        modal.style.display = "flex"; }
+    function saveClientModal() { const id = document.getElementById("clientId").value; const nome = document.getElementById("clientNome").value; const usuario = document.getElementById("clientUsuario").value; const planoId = parseInt(document.getElementById("clientPlanoId").value); const vencimento = document.getElementById("clientVencimento").value; const telefone = document.getElementById("clientTelefone").value; if(!nome || !usuario || !vencimento){ alert("Preencha nome, usuário e vencimento"); return; }
+        if(id){ const idx = clients.findIndex(c=>c.id==id); clients[idx] = {...clients[idx], nome, usuario, planoId, vencimento, telefone}; }
+        else { const newId = Date.now(); clients.push({id:newId, nome, usuario, telefone, planoId, vencimento, createdAt:new Date().toISOString().split('T')[0]}); }
+        saveToLocal(); refreshAll(); document.getElementById("clientModal").style.display = "none"; }
+    function openWhatsAppModal(client) { const modal = document.getElementById("whatsModal"); document.getElementById("whatsNome").innerText = client.nome; let defaultMsg = templates.whatsappManual.replace(/{{nome}}/g, client.nome).replace(/{{usuario}}/g, client.usuario); document.getElementById("whatsMsg").value = defaultMsg; modal.style.display = "flex"; document.getElementById("sendWhatsBtn").onclick = () => { const finalMsg = document.getElementById("whatsMsg").value; if(client.telefone) window.open(`https://wa.me/${client.telefone.replace(/\D/g,'')}?text=${encodeURIComponent(finalMsg)}`, '_blank'); else alert("Telefone não cadastrado"); modal.style.display="none"; }; }
+    function exportBackup() { const clientSheet = XLSX.utils.json_to_sheet(clients.map(c=>({...c, planoNome:getPlanById(c.planoId)?.nome}))); const planSheet = XLSX.utils.json_to_sheet(plans); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, clientSheet, "Clientes"); XLSX.utils.book_append_sheet(wb, planSheet, "Planos"); XLSX.writeFile(wb, `iptv_backup_${new Date().toISOString().slice(0,19)}.xlsx`); }
+    function importBackup(file) { const reader = new FileReader(); reader.onload = function(e) { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); const clientSheet = workbook.Sheets["Clientes"]; const planSheet = workbook.Sheets["Planos"]; if(clientSheet && planSheet){ const importedClients = XLSX.utils.sheet_to_json(clientSheet); const importedPlans = XLSX.utils.sheet_to_json(planSheet); if(importedPlans.length>0) plans = importedPlans.map(p=>({id:p.id||Date.now()+Math.random(), nome:p.nome, valor:parseFloat(p.valor)})); if(importedClients.length) clients = importedClients.map(c=>({id:c.id||Date.now()+Math.random(), nome:c.nome, usuario:c.usuario, telefone:c.telefone, planoId:c.planoId, vencimento:c.vencimento, createdAt:c.createdAt||new Date().toISOString().split('T')[0]})); ensureMinPlan(); saveToLocal(); refreshAll(); alert("Restaurado!"); } else alert("Arquivo inválido: faltam abas Clientes/Planos"); }; reader.readAsArrayBuffer(file); }
+
+    function refreshAll() { renderDashboard(); renderPlanos(); renderLembretesProgramados(); }
+
+    // Inicialização e eventos
+    function init() {
+        loadFromLocal(); ensureMinPlan(); refreshAll();
+        document.getElementById("searchInput").addEventListener("input", (e)=>{ searchTerm=e.target.value; renderClientTable(); });
+        document.getElementById("addClientBtn").onclick = ()=>openClientModal();
+        document.getElementById("renewSelectedBtn").onclick = () => { const checkboxes = document.querySelectorAll('.clientCheckbox:checked'); if(checkboxes.length===0) return alert("Selecione clientes."); checkboxes.forEach(cb=>{ const id = parseInt(cb.dataset.id); const idx = clients.findIndex(c=>c.id===id); if(idx!==-1) clients[idx].vencimento = addOneMonthCalendar(clients[idx].vencimento); }); saveToLocal(); refreshAll(); };
+        document.getElementById("addPlanoBtn")?.addEventListener("click",()=>{ let nome = prompt("Nome do plano"); if(nome){ let valor = parseFloat(prompt("Valor R$:")); plans.push({id:Date.now(), nome, valor}); saveToLocal(); renderPlanos(); refreshAll(); } });
+        document.getElementById("sendAllRemindersBtn")?.addEventListener("click", sendAllReminders);
+        document.getElementById("saveTemplatesBtn")?.addEventListener("click",()=>{ templates.lembrete5dias = document.getElementById("temp5dias").value; templates.lembrete2dias = document.getElementById("temp2dias").value; templates.lembreteHoje = document.getElementById("tempHoje").value; templates.whatsappManual = document.getElementById("tempWhatsManual").value; saveToLocal(); alert("Templates salvos"); });
+        document.getElementById("exportBackupBtn")?.addEventListener("click", exportBackup);
+        document.getElementById("importRestoreBtn")?.addEventListener("click",()=>{ const file = document.getElementById("restoreFileInput").files[0]; if(file) importBackup(file); else alert("Selecione um arquivo"); });
+        document.querySelectorAll("[data-tab]").forEach(btn=>btn.addEventListener("click",(e)=>{ const tab = btn.dataset.tab; document.querySelectorAll(".tab-pane").forEach(p=>p.style.display="none"); document.getElementById(`${tab}Tab`).style.display="block"; document.getElementById("pageTitle").innerText = btn.innerText.trim(); document.querySelectorAll("[data-tab]").forEach(l=>l.classList.remove("active")); btn.classList.add("active"); if(tab==="lembretes") renderLembretesProgramados(); if(tab==="planos") renderPlanos(); if(tab==="configuracoes"){ document.getElementById("temp5dias").value = templates.lembrete5dias; document.getElementById("temp2dias").value = templates.lembrete2dias; document.getElementById("tempHoje").value = templates.lembreteHoje; document.getElementById("tempWhatsManual").value = templates.whatsappManual; } if(tab==="dashboard") renderCharts(); }));
+        document.getElementById("saveClientBtn").onclick = saveClientModal; document.getElementById("closeClientModal").onclick = ()=>document.getElementById("clientModal").style.display="none"; document.getElementById("closeWhatsModal").onclick = ()=>document.getElementById("whatsModal").style.display="none";
+        const hamburger = document.getElementById("hamburgerBtn"); const sidebar = document.getElementById("sidebar"); hamburger.onclick = () => { sidebar.classList.toggle("open"); };
+        document.getElementById("dashboardTab").style.display = "block";
+        if(window.innerWidth < 768) sidebar.classList.remove("open");
+        window.addEventListener('resize', ()=>{ if(window.innerWidth >= 768) sidebar.classList.add('open'); else sidebar.classList.remove('open'); });
+    }
+    init();
+</script>
+</body>
+</html>
