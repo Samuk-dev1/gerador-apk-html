@@ -30,31 +30,40 @@ jobs:
     - name: Preparar Ambiente e Gerar
       run: |
         npm init -y
-        
-        # Instalando a versão 5 do Capacitor
         npm install @capacitor/core@5 @capacitor/android@5 @capacitor/cli@5
         
         mkdir -p www
         cp index.html www/index.html
         
-        npx cap init MeuApp com.meuapp.gerador --web-dir www
+        # Passa o nome que o usuário digitou diretamente para a inicialização do Capacitor
+        APP_NAME="${{ github.event.inputs.app_name }}"
+        npx cap init "$APP_NAME" com.gerador.app --web-dir www
         npx cap add android
         npx cap sync android
 
-    - name: Aplicar Logo Personalizada se existir
+    - name: Aplicar Nome Real e Logo Personalizada
       run: |
+        APP_NAME="${{ github.event.inputs.app_name }}"
+        
+        # 1. Atualiza o strings.xml do Android para o nome aparecer certinho na tela de instalação
+        STRINGS_FILE="android/app/src/main/res/values/strings.xml"
+        if [ -f "$STRINGS_FILE" ]; then
+          sed -i "s/<string name=\"app_name\">.*<\/string>/<string name=\"app_name\">$APP_NAME<\/string>/" "$STRINGS_FILE"
+        fi
+
+        # 2. Se houver logo, substitui os ícones e remove os XMLs de atalho para forçar o uso da imagem
         if [ -f logo.png ]; then
-          echo "Logo encontrada! Aplicando como icone do aplicativo..."
-          # Substitui os ícones padrão do Android (ic_launcher) pela logo enviada pelo usuário em todas as densidades
+          echo "Aplicando logo personalizada..."
           for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            if [ -d "android/app/src/main/res/mipmap-$d" ]; then
-              cp logo.png android/app/src/main/res/mipmap-$d/ic_launcher.png
-              cp logo.png android/app/src/main/res/mipmap-$d/ic_launcher_round.png
-              cp logo.png android/app/src/main/res/mipmap-$d/ic_launcher_foreground.png
+            MIPMAP_DIR="android/app/src/main/res/mipmap-$d"
+            if [ -d "$MIPMAP_DIR" ]; then
+              cp logo.png "$MIPMAP_DIR/ic_launcher.png"
+              cp logo.png "$MIPMAP_DIR/ic_launcher_round.png"
+              # Remove arquivos XML que possam conflitar com a imagem estática
+              rm -f "$MIPMAP_DIR/ic_launcher.xml"
+              rm -f "$MIPMAP_DIR/ic_launcher_round.xml"
             fi
           done
-        else
-          echo "Nenhuma logo enviada, mantendo icone padrao."
         fi
 
     - name: Compilar APK de Debug
