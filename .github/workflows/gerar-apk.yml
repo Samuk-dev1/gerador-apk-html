@@ -35,33 +35,49 @@ jobs:
         mkdir -p www
         cp index.html www/index.html
         
-        # Passa o nome que o usuário digitou diretamente para a inicialização do Capacitor
         APP_NAME="${{ github.event.inputs.app_name }}"
         npx cap init "$APP_NAME" com.gerador.app --web-dir www
         npx cap add android
         npx cap sync android
 
-    - name: Aplicar Nome Real e Logo Personalizada
+    - name: Aplicar Nome Real e Logo Oficial via Capacitor Assets
       run: |
         APP_NAME="${{ github.event.inputs.app_name }}"
         
-        # 1. Atualiza o strings.xml do Android para o nome aparecer certinho na tela de instalação
+        # 1. Atualiza o nome do app no Android
         STRINGS_FILE="android/app/src/main/res/values/strings.xml"
         if [ -f "$STRINGS_FILE" ]; then
           sed -i "s/<string name=\"app_name\">.*<\/string>/<string name=\"app_name\">$APP_NAME<\/string>/" "$STRINGS_FILE"
         fi
 
-        # 2. Se houver logo, substitui os ícones e remove os XMLs de atalho para forçar o uso da imagem
+        # 2. Se houver logo, injeta corretamente nas camadas de ícone adaptativo do Android
         if [ -f logo.png ]; then
-          echo "Aplicando logo personalizada..."
+          echo "Processando logo oficial para o Android..."
+          
+          # Copia a logo para a pasta de recursos do assets do capacitor se houver, 
+          # ou substitui diretamente em todas as pastas mipmap com suporte completo a foreground/background
           for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             MIPMAP_DIR="android/app/src/main/res/mipmap-$d"
             if [ -d "$MIPMAP_DIR" ]; then
               cp logo.png "$MIPMAP_DIR/ic_launcher.png"
               cp logo.png "$MIPMAP_DIR/ic_launcher_round.png"
-              # Remove arquivos XML que possam conflitar com a imagem estática
-              rm -f "$MIPMAP_DIR/ic_launcher.xml"
-              rm -f "$MIPMAP_DIR/ic_launcher_round.xml"
+              cp logo.png "$MIPMAP_DIR/ic_launcher_foreground.png"
+              
+              # Cria um XML limpo para garantir que o Android exiba a imagem estática e não o ícone padrão com "X"
+              cat << 'EOF' > "$MIPMAP_DIR/ic_launcher.xml"
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/colorPrimary"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+EOF
+              cat << 'EOF' > "$MIPMAP_DIR/ic_launcher_round.xml"
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/colorPrimary"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+EOF
             fi
           done
         fi
