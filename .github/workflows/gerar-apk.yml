@@ -2,6 +2,11 @@ name: Gerar APK Prático
 
 on:
   workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'Nome do Aplicativo'
+        required: true
+        default: 'MeuApp'
 
 jobs:
   build:
