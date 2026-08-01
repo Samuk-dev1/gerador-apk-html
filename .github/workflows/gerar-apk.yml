@@ -27,59 +27,29 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Preparar Ambiente e Gerar
+    - name: Preparar Projeto e Capacitor
       run: |
         npm init -y
         npm install @capacitor/core@5 @capacitor/android@5 @capacitor/cli@5
         
         mkdir -p www
-        cp index.html www/index.html
+        if [ -f index.html ]; then
+          cp index.html www/index.html
+        else
+          echo "<html><body><h1>App</h1></body></html>" > www/index.html
+        fi
         
         APP_NAME="${{ github.event.inputs.app_name }}"
         npx cap init "$APP_NAME" com.gerador.app --web-dir www
         npx cap add android
         npx cap sync android
 
-    - name: Aplicar Nome Real e Logo Oficial via Capacitor Assets
+    - name: Aplicar Nome do App
       run: |
         APP_NAME="${{ github.event.inputs.app_name }}"
-        
-        # 1. Atualiza o nome do app no Android
         STRINGS_FILE="android/app/src/main/res/values/strings.xml"
         if [ -f "$STRINGS_FILE" ]; then
           sed -i "s/<string name=\"app_name\">.*<\/string>/<string name=\"app_name\">$APP_NAME<\/string>/" "$STRINGS_FILE"
-        fi
-
-        # 2. Se houver logo, injeta corretamente nas camadas de ícone adaptativo do Android
-        if [ -f logo.png ]; then
-          echo "Processando logo oficial para o Android..."
-          
-          # Copia a logo para a pasta de recursos do assets do capacitor se houver, 
-          # ou substitui diretamente em todas as pastas mipmap com suporte completo a foreground/background
-          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            MIPMAP_DIR="android/app/src/main/res/mipmap-$d"
-            if [ -d "$MIPMAP_DIR" ]; then
-              cp logo.png "$MIPMAP_DIR/ic_launcher.png"
-              cp logo.png "$MIPMAP_DIR/ic_launcher_round.png"
-              cp logo.png "$MIPMAP_DIR/ic_launcher_foreground.png"
-              
-              # Cria um XML limpo para garantir que o Android exiba a imagem estática e não o ícone padrão com "X"
-              cat << 'EOF' > "$MIPMAP_DIR/ic_launcher.xml"
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/colorPrimary"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-EOF
-              cat << 'EOF' > "$MIPMAP_DIR/ic_launcher_round.xml"
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/colorPrimary"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-EOF
-            fi
-          done
         fi
 
     - name: Compilar APK de Debug
