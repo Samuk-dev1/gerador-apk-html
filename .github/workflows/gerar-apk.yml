@@ -31,7 +31,7 @@ jobs:
       run: |
         npm init -y
         
-        # Aqui está o segredo: instalando a versão 5 (Estável) que não tem o bug do Kotlin
+        # Instalando a versão 5 do Capacitor
         npm install @capacitor/core@5 @capacitor/android@5 @capacitor/cli@5
         
         mkdir -p www
@@ -40,6 +40,22 @@ jobs:
         npx cap init MeuApp com.meuapp.gerador --web-dir www
         npx cap add android
         npx cap sync android
+
+    - name: Aplicar Logo Personalizada se existir
+      run: |
+        if [ -f logo.png ]; then
+          echo "Logo encontrada! Aplicando como icone do aplicativo..."
+          # Substitui os ícones padrão do Android (ic_launcher) pela logo enviada pelo usuário em todas as densidades
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            if [ -d "android/app/src/main/res/mipmap-$d" ]; then
+              cp logo.png android/app/src/main/res/mipmap-$d/ic_launcher.png
+              cp logo.png android/app/src/main/res/mipmap-$d/ic_launcher_round.png
+              cp logo.png android/app/src/main/res/mipmap-$d/ic_launcher_foreground.png
+            fi
+          done
+        else
+          echo "Nenhuma logo enviada, mantendo icone padrao."
+        fi
 
     - name: Compilar APK de Debug
       run: |
