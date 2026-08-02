@@ -3,19 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Meu Diário Kawaii</title>
+    <title>PetShop App</title>
     <style>
+        :root {
+            --primary: #ff6b81;
+            --secondary: #ff4757;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2f3542;
+            --gray: #ced6e0;
+            --green: #2ed573;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             user-select: none;
             -webkit-user-select: none;
         }
 
         body {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            background-color: #121212;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,219 +33,467 @@
             overflow: hidden;
         }
 
-        .game-container {
+        .app-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             height: 100%;
             max-height: 100vh;
-            background-color: #fff9fc;
+            background-color: var(--bg);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        @media (min-width: 401px) {
-            .game-container {
-                height: 750px;
+        @media (min-width: 451px) {
+            .app-container {
+                height: 800px;
                 border-radius: 30px;
             }
         }
 
-        .header {
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 2px dashed #ffb6c1;
-        }
-
-        .header h1 {
-            color: #d87093;
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            font-size: 0.9rem;
-            color: #888;
-            font-weight: bold;
-        }
-
-        .story-box {
-            background-color: #fff0f5;
-            border: 2px solid #ffb6c1;
-            border-radius: 20px;
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
             padding: 20px;
-            min-height: 160px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             text-align: center;
-            color: #555;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.03);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
         }
 
-        .choices-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        /* Conteúdo Dinâmico */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            padding-bottom: 70px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Cards e Layout */
+        .card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
             margin-bottom: 15px;
         }
 
-        .btn-choice {
-            background-color: #ffb6c1;
-            color: #fff;
-            border: none;
-            border-radius: 15px;
+        .stat-card {
+            background: white;
             padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+
+        .stat-card h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-card p {
+            font-size: 0.8rem;
+            color: #747d8c;
+        }
+
+        /* Formulários e Inputs */
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: #fff;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(255, 182, 193, 0.4);
-            text-align: center;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
         }
 
-        .btn-choice:active {
-            transform: scale(0.97);
-            background-color: #ff91a4;
+        .btn:active {
+            opacity: 0.8;
         }
 
-        .restart-btn {
-            background-color: #dda0dd;
-            display: none;
+        .btn-green {
+            background-color: var(--green);
+            box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3);
+        }
+
+        /* Listas de itens salvos */
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .list-item {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .list-item span strong {
+            color: #2f3542;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff4757;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+        }
+
+        /* Navegação Inferior (Bottom Bar) */
+        nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #f1f2f6;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #a4b0be;
+            font-size: 0.75rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .nav-item span.icon {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        h2.section-title {
+            font-size: 1.1rem;
+            color: #2f3542;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <div class="header">
-            <h1>🌸 Meu Diário Kawaii 🌸</h1>
-            <div class="stats">
-                <span id="fama-txt">Fama: ❤️ 50</span>
-                <span id="energia-txt">Energia: ⚡ 50</span>
+    <div class="app-container">
+        <header>
+            <h1 id="header-title">🐾 PetShop Amigo Fiel</h1>
+        </header>
+
+        <div class="content">
+            <!-- TELA 1: DASHBOARD -->
+            <div id="screen-home" class="screen active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="stat-pets">0</h3>
+                        <p>Pets Cadastrados</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="stat-agendamentos">0</h3>
+                        <p>Agendamentos</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">📅 Próximos Atendimentos</h2>
+                    <div id="home-agenda-list" class="item-list">
+                        <p style="color: #a4b0be; font-size: 0.85rem; text-align: center;">Nenhum agendamento recente.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">✨ Acesso Rápido</h2>
+                    <button class="btn" onclick="switchScreen('pets', document.querySelectorAll('.nav-item')[1])" style="margin-bottom: 8px;">Cadastrar Novo Pet</button>
+                    <button class="btn btn-green" onclick="switchScreen('agenda', document.querySelectorAll('.nav-item')[2])">Novo Agendamento</button>
+                </div>
+            </div>
+
+            <!-- TELA 2: PETS E CLIENTES -->
+            <div id="screen-pets" class="screen">
+                <div class="card">
+                    <h2 class="section-title">🐶 Cadastro de Pet & Dono</h2>
+                    <input type="text" id="owner-name" placeholder="Nome do Tutor">
+                    <input type="text" id="owner-phone" placeholder="Telefone / WhatsApp">
+                    <input type="text" id="pet-name" placeholder="Nome do Pet">
+                    <select id="pet-species">
+                        <option value="Cachorro">Cachorro 🐕</option>
+                        <option value="Gato">Gato 🐈</option>
+                        <option value="Outro">Outro 🐇🦜</option>
+                    </select>
+                    <button class="btn" onclick="addPet()">Salvar Pet</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">📋 Lista de Pets</h2>
+                    <div id="pets-list" class="item-list">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA 3: AGENDA / SERVIÇOS -->
+            <div id="screen-agenda" class="screen">
+                <div class="card">
+                    <h2 class="section-title">✂️ Agendar Serviço</h2>
+                    <select id="agenda-pet-select">
+                        <option value="">Selecione o Pet...</option>
+                    </select>
+                    <select id="agenda-service">
+                        <option value="Banho e Tosa">Banho e Tosa 🚿</option>
+                        <option value="Consulta Veterinária">Consulta Veterinária 🩺</option>
+                        <option value="Hotelzinho">Hotelzinho 🏡</option>
+                        <option value="Tosa Higiênica">Tosa Higiênica ✂️</option>
+                    </select>
+                    <input type="date" id="agenda-date">
+                    <input type="time" id="agenda-time">
+                    <button class="btn btn-green" onclick="addAgenda()">Confirmar Agendamento</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">🗓️ Agenda de Serviços</h2>
+                    <div id="agenda-list" class="item-list">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA 4: PRODUTOS / PDV -->
+            <div id="screen-shop" class="screen">
+                <div class="card">
+                    <h2 class="section-title">🛍️ Produtos & Rações</h2>
+                    <div class="item-list">
+                        <div class="list-item">
+                            <span><strong>Ração Premium 10kg</strong><br><small>R$ 120,00</small></span>
+                            <button class="btn btn-green" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="vender('Ração Premium 10kg', 120)">Vender</button>
+                        </div>
+                        <div class="list-item">
+                            <span><strong>Brinquedo Mordedor</strong><br><small>R$ 25,00</small></span>
+                            <button class="btn btn-green" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="vender('Brinquedo Mordedor', 25)">Vender</button>
+                        </div>
+                        <div class="list-item">
+                            <span><strong>Tapete Higiênico (30 un)</strong><br><small>R$ 45,00</small></span>
+                            <button class="btn btn-green" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="vender('Tapete Higiênico', 45)">Vender</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <p style="font-size: 0.85rem; color: #747d8c;">Total de Vendas Registradas Hoje:</p>
+                    <h2 id="total-vendas" style="color: var(--green); font-size: 1.8rem; margin-top: 5px;">R$ 0,00</h2>
+                </div>
             </div>
         </div>
 
-        <div class="story-box" id="story-text">
-            Carregando sua história...
-        </div>
-
-        <div class="choices-container" id="choices-box">
-            <!-- Os botões de escolha vão aparecer aqui dinamicamente -->
-        </div>
+        <!-- Navegação Inferior -->
+        <nav>
+            <button class="nav-item active" onclick="switchScreen('home', this)">
+                <span class="icon">🏠</span>
+                Início
+            </button>
+            <button class="nav-item" onclick="switchScreen('pets', this)">
+                <span class="icon">🐶</span>
+                Pets
+            </button>
+            <button class="nav-item" onclick="switchScreen('agenda', this)">
+                <span class="icon">📅</span>
+                Agenda
+            </button>
+            <button class="nav-item" onclick="switchScreen('shop', this)">
+                <span class="icon">🛍️</span>
+                Produtos
+            </button>
+        </nav>
     </div>
 
     <script>
-        let fama = 50;
-        let energia = 50;
+        // Banco de Dados Local (LocalStorage)
+        let pets = JSON.parse(localStorage.getItem('petshop_pets')) || [];
+        let agendas = JSON.parse(localStorage.getItem('petshop_agendas')) || [];
+        let totalVendas = parseFloat(localStorage.getItem('petshop_vendas')) || 0;
 
-        const storyText = document.getElementById("story-text");
-        const choicesBox = document.getElementById("choices-box");
-        const famaTxt = document.getElementById("fama-txt");
-        const energiaTxt = document.getElementById("energia-txt");
-
-        const nodes = {
-            inicio: {
-                texto: "Hoje é sábado de sol! O que você quer fazer primeiro para aproveitar o seu dia?",
-                escolhas: [
-                    { texto: "👗 Ir ao shopping comprar um look novo", proximo: "shopping" },
-                    { texto: "☕ Encontrar as amigas num café fofinho", proximo: "cafe" },
-                    { texto: "🛌 Ficar em casa assistindo doramas", proximo: "casa" }
-                ]
-            },
-            shopping: {
-                texto: "Você foi ao shopping e achou um vestido perfeito na vitrine! Como você paga?",
-                efeito: () => { fama += 15; energia -= 10; },
-                escolhas: [
-                    { texto: "Comprar e postar uma foto do look nas redes sociais", proximo: "shopping_foto" },
-                    { texto: "Economizar e comprar apenas acessórios fofos", proximo: "shopping_acessorios" }
-                ]
-            },
-            cafe: {
-                texto: "O café está delicioso! Suas amigas contam uma fofoca super interessante sobre a escola.",
-                efeito: () => { fama += 10; energia += 10; },
-                escolhas: [
-                    { texto: "Dar a sua opinião sincera e rir muito com elas", proximo: "cafe_rir" },
-                    { texto: "Ouvir atenta e pedir um bolo de morango extra", proximo: "cafe_bolo" }
-                ]
-            },
-            casa: {
-                texto: "Seu quarto está super aconchegante com luzinhas de led. Qual dorama você maratona?",
-                efeito: () => { fama -= 5; energia += 25; },
-                escolhas: [
-                    { texto: "Um romance colegial bem clichê", proximo: "casa_romance" },
-                    { texto: "Um suspense misterioso cheio de reviravoltas", proximo: "casa_misterio" }
-                ]
-            },
-            // Finais / Desdobramentos
-            shopping_foto: {
-                texto: "Sua foto bombou na internet! Você ganhou centenas de seguidores e fechou o dia como a garota mais estilosa. Fim de jogo perfeito! ✨",
-                fim: true
-            },
-            shopping_acessorios: {
-                texto: "Você ficou linda com seus novos acessórios delicados e teve um dia super tranquilo e cheio de paz. Fim de jogo aconchegante! 🌸",
-                fim: true
-            },
-            cafe_rir: {
-                texto: "Sua tarde foi cheia de risadas e boas energias. Você se tornou a alma do grupo! Fim de jogo divertido! 💕",
-                fim: true
-            },
-            cafe_bolo: {
-                texto: "O bolo estava divino e você passou horas conversando sobre a vida. Um sábado revigorante! Fim de jogo doce! 🍰",
-                fim: true
-            },
-            casa_romance: {
-                texto: "Você chorou e suspirou com o final do dorama, mas descansou bastante para a próxima semana. Fim de jogo relaxante! 🌙",
-                fim: true
-            },
-            casa_misterio: {
-                texto: "Você desvendou o mistério antes do detetive da série e dormiu como uma verdadeira detetive inteligente! Fim de jogo incrível! 🔍",
-                fim: true
-            }
-        };
-
-        function mostrarNo(nodeKey) {
-            const node = nodes[nodeKey];
+        // Alternar Telas
+        function switchScreen(screenId, element) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             
-            if (node.efeito) {
-                node.efeito();
-            }
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            element.classList.add('active');
 
-            famaTxt.innerText = `Fama: ❤️ ${fama}`;
-            energiaTxt.innerText = `Energia: ⚡ ${energia}`;
-            storyText.innerText = node.texto;
-            choicesBox.innerHTML = "";
-
-            if (node.fim) {
-                const btnReiniciar = document.createElement("button");
-                btnReiniciar.innerText = "🔄 Jogar de Novo";
-                btnReiniciar.className = "btn-choice restart-btn";
-                btnReiniciar.style.display = "block";
-                btnReiniciar.onclick = () => {
-                    fama = 50;
-                    energia = 50;
-                    mostrarNo('inicio');
-                };
-                choicesBox.appendChild(btnReiniciar);
-            } else {
-                node.escolhas.forEach(escolha => {
-                    const btn = document.createElement("button");
-                    btn.className = "btn-choice";
-                    btn.innerText = escolha.texto;
-                    btn.onclick = () => mostrarNo(escolha.proximo);
-                    choicesBox.appendChild(btn);
-                });
-            }
+            const titles = {
+                'home': '🐾 PetShop Amigo Fiel',
+                'pets': '🐶 Gestão de Pets',
+                'agenda': '📅 Agenda de Atendimentos',
+                'shop': '🛍️ Vendas e Produtos'
+            };
+            document.getElementById('header-title').innerText = titles[screenId];
+            
+            atualizarInterface();
         }
 
-        // Iniciar o jogo
-        mostrarNo('inicio');
+        // Funções de Pets
+        function addPet() {
+            const owner = document.getElementById('owner-name').value;
+            const phone = document.getElementById('owner-phone').value;
+            const petName = document.getElementById('pet-name').value;
+            const species = document.getElementById('pet-species').value;
+
+            if(!owner || !petName) {
+                alert('Preencha o nome do tutor e do pet!');
+                return;
+            }
+
+            pets.push({ id: Date.now(), owner, phone, petName, species });
+            localStorage.setItem('petshop_pets', JSON.stringify(pets));
+
+            document.getElementById('owner-name').value = '';
+            document.getElementById('owner-phone').value = '';
+            document.getElementById('pet-name').value = '';
+
+            atualizarInterface();
+            alert('Pet cadastrado com sucesso! ✨');
+        }
+
+        function deletePet(id) {
+            pets = pets.filter(p => p.id !== id);
+            localStorage.setItem('petshop_pets', JSON.stringify(pets));
+            atualizarInterface();
+        }
+
+        // Funções de Agenda
+        function addAgenda() {
+            const petSelect = document.getElementById('agenda-pet-select').value;
+            const service = document.getElementById('agenda-service').value;
+            const date = document.getElementById('agenda-date').value;
+            const time = document.getElementById('agenda-time').value;
+
+            if(!petSelect || !date || !time) {
+                alert('Preencha todos os campos do agendamento!');
+                return;
+            }
+
+            agendas.push({ id: Date.now(), pet: petSelect, service, date, time });
+            localStorage.setItem('petshop_agendas', JSON.stringify(agendas));
+
+            document.getElementById('agenda-date').value = '';
+            document.getElementById('agenda-time').value = '';
+
+            atualizarInterface();
+            alert('Serviço agendado com sucesso! 📅');
+        }
+
+        function deleteAgenda(id) {
+            agendas = agendas.filter(a => a.id !== id);
+            localStorage.setItem('petshop_agendas', JSON.stringify(agendas));
+            atualizarInterface();
+        }
+
+        // Sistema de Vendas Simples
+        function vender(produto, valor) {
+            totalVendas += valor;
+            localStorage.setItem('petshop_vendas', totalVendas);
+            atualizarInterface();
+            alert(`Venda registrada: ${produto} (R$ ${valor.toFixed(2)}) ✅`);
+        }
+
+        // Atualizar todas as telas e selects
+        function atualizarInterface() {
+            // Stats
+            document.getElementById('stat-pets').innerText = pets.length;
+            document.getElementById('stat-agendamentos').innerText = agendas.length;
+            document.getElementById('total-vendas').innerText = `R$ ${totalVendas.toFixed(2)}`;
+
+            // Lista de Pets
+            const petsListHtml = pets.length ? pets.map(p => `
+                <div class="list-item">
+                    <span><strong>${p.petName}</strong> (${p.species})<br><small>Tutor: ${p.owner} - ${p.phone}</small></span>
+                    <button class="delete-btn" onclick="deletePet(${p.id})">🗑️</button>
+                </div>
+            `).join('') : '<p style="color: #a4b0be; font-size: 0.85rem; text-align: center;">Nenhum pet cadastrado.</p>';
+            document.getElementById('pets-list').innerHTML = petsListHtml;
+
+            // Select de Pets no Agendamento
+            const selectHtml = '<option value="">Selecione o Pet...</option>' + pets.map(p => `<option value="${p.petName} (${p.owner})">${p.petName} - ${p.owner}</option>`).join('');
+            document.getElementById('agenda-pet-select').innerHTML = selectHtml;
+
+            // Lista de Agendamentos
+            const agendaListHtml = agendas.length ? agendas.map(a => `
+                <div class="list-item">
+                    <span><strong>${a.pet}</strong><br><small>${a.service} | ${a.date.split('-').reverse().join('/')} às ${a.time}</small></span>
+                    <button class="delete-btn" onclick="deleteAgenda(${a.id})">🗑️</button>
+                </div>
+            `).join('') : '<p style="color: #a4b0be; font-size: 0.85rem; text-align: center;">Nenhum agendamento ativo.</p>';
+            
+            document.getElementById('agenda-list').innerHTML = agendaListHtml;
+            document.getElementById('home-agenda-list').innerHTML = agendaListHtml;
+        }
+
+        // Carregar dados iniciais ao abrir o app
+        atualizarInterface();
     </script>
 </body>
 </html>
