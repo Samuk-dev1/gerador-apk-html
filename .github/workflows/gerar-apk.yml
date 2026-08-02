@@ -27,7 +27,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Preparar Projeto e Capacitor
+    - name: Preparar Projeto e Aplicar Logo/Nome
       run: |
         npm init -y
         npm install @capacitor/core@5 @capacitor/android@5 @capacitor/cli@5
@@ -42,17 +42,14 @@ jobs:
         APP_NAME="${{ github.event.inputs.app_name }}"
         npx cap init "$APP_NAME" com.gerador.app --web-dir www
         npx cap add android
-        npx cap sync android
-
-    - name: Aplicar Nome e Logo Personalizada (se enviada)
-      run: |
-        APP_NAME="${{ github.event.inputs.app_name }}"
+        
+        # 1. Aplica o nome correto no Android
         STRINGS_FILE="android/app/src/main/res/values/strings.xml"
         if [ -f "$STRINGS_FILE" ]; then
           sed -i "s/<string name=\"app_name\">.*<\/string>/<string name=\"app_name\">$APP_NAME<\/string>/" "$STRINGS_FILE"
         fi
 
-        # Se houver logo enviada pelo usuário, aplica como ícone do app
+        # 2. Aplica a logo enviada, após o projeto Android já estar gerado
         if [ -f logo.png ]; then
           echo "Logo personalizada encontrada! Aplicando aos ícones..."
           for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
@@ -65,6 +62,8 @@ jobs:
             fi
           done
         fi
+        
+        npx cap sync android
 
     - name: Compilar APK de Debug
       run: |
