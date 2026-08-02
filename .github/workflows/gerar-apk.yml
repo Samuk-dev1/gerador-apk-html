@@ -39,8 +39,14 @@ jobs:
         
         APP_NAME="${{ github.event.inputs.app_name }}"
         
-        # Inicializa o Capacitor usando o nome digitado pelo usuário
-        npx cap init "$APP_NAME" com.meuapp.gerador --web-dir www
+        # Cria um identificador único com base no nome digitado para evitar conflitos no Android
+        APP_ID=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]')
+        if [ -z "$APP_ID" ]; then
+          APP_ID="app"
+        fi
+        
+        # Inicializa o Capacitor usando o ID único gerado
+        npx cap init "$APP_NAME" com.gerador.$APP_ID --web-dir www
         npx cap add android
 
         # Aplica o nome exato no arquivo de strings nativo do Android
