@@ -36,6 +36,9 @@ jobs:
         
         mkdir -p www
         cp index.html www/index.html
+
+        # Limpa qualquer logo antiga que sobrou do build anterior para evitar herdar a imagem de outro usuário
+        rm -f logo.png
         
         APP_NAME="${{ github.event.inputs.app_name }}"
         
@@ -55,7 +58,7 @@ jobs:
           sed -i "s/<string name=\"app_name\">.*<\/string>/<string name=\"app_name\">$APP_NAME<\/string>/" "$STRINGS_FILE"
         fi
 
-        # Se o usuário enviou uma logo, ajusta ela automaticamente para o padrão de ícones do Android
+        # Se o usuário enviou uma logo nova, ajusta ela automaticamente para o padrão de ícones do Android
         if [ -f logo.png ]; then
           echo "Logo personalizada encontrada! Otimizando e redimensionando automaticamente..."
           
