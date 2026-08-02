@@ -1,1 +1,400 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#fff;text-align:center;}h1{font-size:16px;}</style></head><body><div><h1>Meu App</h1><p>Pronto!</p></div></body></html>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZapGestão Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <style>
+        .active-filter { border: 2px solid #4f46e5 !important; transform: scale(1.02); }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Oculta elementos desnecessários na hora de imprimir o PDF */
+        @media print {
+            .no-print { display: none !important; }
+            .print-w-full { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            body { background: white; }
+            .shadow-sm, .shadow-xl { box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans flex h-screen overflow-hidden">
+
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden no-print"></div>
+    
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 flex flex-col shadow-xl no-print">
+        <div class="p-5 bg-slate-950 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2 font-bold text-white text-xl">
+                <i class="ph ph-wallet text-indigo-500 text-2xl"></i> <span>ZapGestão</span>
+            </div>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <button onclick="definirFiltro('todos')" class="w-full flex items-center gap-3 px-4 py-3 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-600/20 text-left font-medium"><i class="ph ph-squares-four text-xl"></i> Painel Geral</button>
+            <button onclick="toggleModal('modalNovo')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl text-left font-medium transition-colors"><i class="ph ph-plus-circle text-xl"></i> Novo Lançamento</button>
+            <button onclick="window.print()" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl text-left font-medium transition-colors"><i class="ph ph-printer text-xl"></i> Imprimir Relatório</button>
+        </nav>
+        <div class="p-4 border-t border-slate-800">
+            <button onclick="toggleModal('modalConfig')" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"><i class="ph ph-gear text-lg"></i> Configurações</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden print-w-full">
+        
+        <header class="bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex items-center justify-between shadow-sm z-10 no-print">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600"><i class="ph ph-list text-2xl"></i></button>
+                <div class="relative hidden sm:block">
+                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="inputBusca" onkeyup="renderizarSistema()" placeholder="Buscar cliente..." class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none w-64 text-sm transition-all">
+                </div>
+            </div>
+            <button onclick="toggleModal('modalNovo')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md flex items-center gap-2 transition-all">
+                <i class="ph ph-plus text-bold"></i> <span class="hidden sm:inline">Lançar Item</span>
+            </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 print-w-full">
+            
+            <div class="relative sm:hidden no-print">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="inputBuscaMobile" onkeyup="sincronizarBusca(this.value)" placeholder="Buscar cliente..." class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-sm shadow-sm">
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+                <div onclick="definirFiltro('todos')" id="card-filtro-todos" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-indigo-400 transition-all active-filter">
+                    <span class="text-xs font-semibold text-slate-400 uppercase">Total Previsto</span>
+                    <h3 class="text-xl md:text-2xl font-bold mt-2" id="db-todos">R$ 0,00</h3>
+                </div>
+                <div onclick="definirFiltro('pago')" id="card-filtro-pago" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-emerald-400 transition-all">
+                    <span class="text-xs font-semibold text-slate-400 uppercase flex items-center gap-1">Em Caixa <div class="w-2 h-2 bg-emerald-500 rounded-full"></div></span>
+                    <h3 class="text-xl md:text-2xl font-bold text-emerald-600 mt-2" id="db-pagos">R$ 0,00</h3>
+                </div>
+                <div onclick="definirFiltro('hoje')" id="card-filtro-hoje" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-amber-400 transition-all">
+                    <span class="text-xs font-semibold text-slate-400 uppercase flex items-center gap-1">Vence Hoje <div class="w-2 h-2 bg-amber-500 rounded-full animate-ping"></div></span>
+                    <h3 class="text-xl md:text-2xl font-bold text-amber-600 mt-2" id="db-hoje">R$ 0,00</h3>
+                </div>
+                <div onclick="definirFiltro('atrasado')" id="card-filtro-atrasado" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-rose-400 transition-all">
+                    <span class="text-xs font-semibold text-slate-400 uppercase flex items-center gap-1">Em Atraso <div class="w-2 h-2 bg-rose-500 rounded-full"></div></span>
+                    <h3 class="text-xl md:text-2xl font-bold text-rose-600 mt-2" id="db-atrasados">R$ 0,00</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm no-print hidden md:block">
+                <h3 class="text-sm font-bold text-slate-700 mb-2">Visão Geral de Status</h3>
+                <div class="h-48 w-full flex justify-center"><canvas id="graficoStatus"></canvas></div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                    <span class="font-bold text-slate-700 text-sm">Lançamentos Detalhados</span>
+                    <span id="filtro-badge" class="hidden text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md font-bold">Filtrado</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-slate-100/70 text-slate-500 text-[11px] uppercase font-bold border-b border-slate-200">
+                                <th class="px-4 py-3">Cliente</th>
+                                <th class="px-4 py-3">Produto / Obs</th>
+                                <th class="px-4 py-3">Vencimento</th>
+                                <th class="px-4 py-3">Valor</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3 text-right no-print">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-itens" class="divide-y divide-slate-100 text-sm">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalNovo" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <h2 id="tituloModal" class="text-lg font-bold text-slate-800">Nova Venda</h2>
+                <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-600"><i class="ph ph-x text-xl"></i></button>
+            </div>
+
+            <form id="formVenda" onsubmit="salvarVenda(event)" class="space-y-4">
+                <input type="hidden" id="editId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome do Cliente</label>
+                    <input type="text" id="addNome" required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">WhatsApp (Com DDD)</label>
+                    <input type="tel" id="addWhats" required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Produto / Serviço</label>
+                    <input type="text" id="addProduto" required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Valor (R$)</label>
+                        <input type="number" id="addValor" step="0.01" required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vencimento</label>
+                        <input type="date" id="addData" required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Observação</label>
+                    <textarea id="addObs" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                </div>
+                <div class="pt-2 flex gap-2 justify-end">
+                    <button type="button" onclick="fecharModal()" class="px-4 py-2 bg-slate-100 font-medium rounded-xl text-slate-600">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 font-semibold text-white rounded-xl">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalConfig" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <h2 class="text-lg font-bold text-slate-800">Configurações</h2>
+                <button onclick="toggleModal('modalConfig')" class="text-slate-400 hover:text-slate-600"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome da sua Empresa/Loja</label>
+                    <p class="text-[10px] text-slate-400 mb-2">Isso aparecerá na mensagem do WhatsApp.</p>
+                    <input type="text" id="configEmpresa" placeholder="Ex: Loja do João" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <button onclick="salvarConfig()" class="w-full py-2 bg-indigo-600 font-semibold text-white rounded-xl">Salvar Configurações</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // INICIALIZAÇÃO DE DADOS (LocalStorage)
+        let bdVendas = JSON.parse(localStorage.getItem('zap_vendas')) || [];
+        let nomeEmpresa = localStorage.getItem('zap_empresa') || 'nossa loja';
+        let filtroAtual = 'todos';
+        let meuGrafico;
+
+        // Ao carregar a página
+        window.onload = () => {
+            document.getElementById('configEmpresa').value = nomeEmpresa === 'nossa loja' ? '' : nomeEmpresa;
+            renderizarSistema();
+        };
+
+        // FUNÇÕES DE SISTEMA BÁSICAS
+        const salvarLocal = () => localStorage.setItem('zap_vendas', JSON.stringify(bdVendas));
+        const formatarGrana = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+        const formatarDataBR = (d) => d.split('-').reverse().join('/');
+        
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+        function fecharModal() {
+            document.getElementById('formVenda').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('tituloModal').innerText = 'Nova Venda';
+            toggleModal('modalNovo');
+        }
+
+        // SALVAR CONFIGURAÇÕES (Empresa)
+        function salvarConfig() {
+            const nome = document.getElementById('configEmpresa').value.trim();
+            nomeEmpresa = nome || 'nossa loja';
+            localStorage.setItem('zap_empresa', nomeEmpresa);
+            toggleModal('modalConfig');
+            alert('Configurações salvas!');
+            renderizarSistema(); // Atualiza os links de whatsapp
+        }
+
+        // SINCRONIZAR BUSCA (Desktop e Mobile)
+        function sincronizarBusca(valor) {
+            document.getElementById('inputBusca').value = valor;
+            renderizarSistema();
+        }
+
+        // DEFINIR FILTRO DOS CARDS
+        function definirFiltro(tipo) {
+            filtroAtual = tipo;
+            document.querySelectorAll('[id^="card-filtro-"]').forEach(c => c.classList.remove('active-filter'));
+            document.getElementById(`card-filtro-${tipo}`).classList.add('active-filter');
+            
+            const badge = document.getElementById('filtro-badge');
+            if(tipo === 'todos') badge.classList.add('hidden');
+            else {
+                badge.classList.remove('hidden');
+                badge.innerText = `Mostrando: ${tipo.toUpperCase()}`;
+            }
+            renderizarSistema();
+        }
+
+        // RENDERIZAR TUDO (Tabela, Cards, Gráficos)
+        function renderizarSistema() {
+            const tabela = document.getElementById('tabela-itens');
+            tabela.innerHTML = '';
+
+            let buscaTexto = document.getElementById('inputBusca').value.toLowerCase();
+            let totalTodos = 0, totalPagos = 0, totalHoje = 0, totalAtrasados = 0;
+            const hojeStr = new Date().toISOString().split('T')[0];
+
+            bdVendas.forEach(item => {
+                // Definir Status
+                let status = item.pago ? 'pago' : (item.data < hojeStr ? 'atrasado' : (item.data === hojeStr ? 'hoje' : 'pendente'));
+
+                // Somatórios Globais (Ignora o filtro de texto/abas para o dashboard)
+                totalTodos += item.valor;
+                if (status === 'pago') totalPagos += item.valor;
+                if (status === 'hoje') totalHoje += item.valor;
+                if (status === 'atrasado') totalAtrasados += item.valor;
+
+                // Aplica Filtros para a Tabela
+                if (filtroAtual !== 'todos' && filtroAtual !== status) return;
+                if (buscaTexto && !item.cliente.toLowerCase().includes(buscaTexto) && !item.produto.toLowerCase().includes(buscaTexto)) return;
+
+                // Estilos
+                let badgeStyle = '', statusTxt = '';
+                if(status === 'pago') { badgeStyle = 'bg-emerald-100 text-emerald-700'; statusTxt = 'Recebido'; } 
+                else if(status === 'hoje') { badgeStyle = 'bg-amber-100 text-amber-700 animate-pulse'; statusTxt = 'Vence Hoje'; } 
+                else if(status === 'atrasado') { badgeStyle = 'bg-rose-100 text-rose-700'; statusTxt = 'Atrasado'; } 
+                else { badgeStyle = 'bg-slate-100 text-slate-600'; statusTxt = 'Agendado'; }
+
+                // Link WhatsApp Personalizado
+                const saudacao = `Olá ${item.cliente}, tudo bem? Aqui é da *${nomeEmpresa}*.`;
+                const assunto = `Passando para lembrar do agendamento referente a *${item.produto}* no valor de *${formatarGrana(item.valor)}* com vencimento em *${formatarDataBR(item.data)}*.`;
+                const obsMsg = item.obs ? `\nObs: ${item.obs}` : '';
+                const linkZap = `https://wa.me/${item.whats.replace(/\D/g, '')}?text=${encodeURIComponent(saudacao + " " + assunto + obsMsg)}`;
+
+                tabela.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-3 font-semibold text-slate-900">${item.cliente} <br><span class="text-[10px] text-slate-400 font-normal">${item.whats}</span></td>
+                        <td class="px-4 py-3 text-slate-600 max-w-[180px] truncate">
+                            <span class="font-medium block truncate">${item.produto}</span>
+                            <span class="text-[10px] text-slate-400 block truncate">${item.obs || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600 text-sm font-medium">${formatarDataBR(item.data)}</td>
+                        <td class="px-4 py-3 font-bold text-slate-900">${formatarGrana(item.valor)}</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 text-[10px] rounded-md font-bold uppercase ${badgeStyle}">${statusTxt}</span></td>
+                        <td class="px-4 py-3 text-right space-x-1 no-print">
+                            ${!item.pago ? `<button onclick="marcarPago(${item.id})" class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-200 text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all" title="Dar Baixa">Pagar</button>` : `<span class="text-xs text-emerald-600 font-bold mr-2"><i class="ph ph-check"></i> Pago</span>`}
+                            
+                            <a href="${linkZap}" target="_blank" class="inline-flex items-center p-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition-all" title="WhatsApp"><i class="ph ph-whatsapp-logo text-sm"></i></a>
+                            <button onclick="editarItem(${item.id})" class="inline-flex items-center p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-600 hover:text-white transition-all" title="Editar"><i class="ph ph-pencil-simple text-sm"></i></button>
+                            <button onclick="deletarItem(${item.id})" class="inline-flex items-center p-1.5 bg-red-100 text-red-600 rounded hover:bg-red-600 hover:text-white transition-all" title="Excluir"><i class="ph ph-trash text-sm"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Atualiza Dashboard
+            document.getElementById('db-todos').innerText = formatarGrana(totalTodos);
+            document.getElementById('db-pagos').innerText = formatarGrana(totalPagos);
+            document.getElementById('db-hoje').innerText = formatarGrana(totalHoje);
+            document.getElementById('db-atrasados').innerText = formatarGrana(totalAtrasados);
+
+            atualizarGrafico(totalPagos, (totalTodos - totalPagos - totalAtrasados), totalAtrasados);
+        }
+
+        // SALVAR (Criar novo ou Editar existente)
+        function salvarVenda(e) {
+            e.preventDefault();
+            let tel = document.getElementById('addWhats').value.replace(/\D/g, '');
+            if(tel.length === 11 || tel.length === 10) tel = "55" + tel; // Força código BR se faltar
+
+            const itemData = {
+                cliente: document.getElementById('addNome').value,
+                whats: tel,
+                produto: document.getElementById('addProduto').value,
+                valor: parseFloat(document.getElementById('addValor').value),
+                data: document.getElementById('addData').value,
+                obs: document.getElementById('addObs').value,
+                pago: false
+            };
+
+            const editId = document.getElementById('editId').value;
+            
+            if (editId) {
+                // Modo Edição
+                const index = bdVendas.findIndex(i => i.id == editId);
+                itemData.id = parseInt(editId);
+                itemData.pago = bdVendas[index].pago; // Mantém o status de pagamento
+                bdVendas[index] = itemData;
+            } else {
+                // Modo Novo
+                itemData.id = Date.now();
+                bdVendas.push(itemData);
+            }
+
+            salvarLocal();
+            fecharModal();
+            renderizarSistema();
+        }
+
+        // CARREGAR DADOS PARA EDIÇÃO
+        function editarItem(id) {
+            const item = bdVendas.find(i => i.id === id);
+            if(item) {
+                document.getElementById('editId').value = item.id;
+                document.getElementById('addNome').value = item.cliente;
+                document.getElementById('addWhats').value = item.whats;
+                document.getElementById('addProduto').value = item.produto;
+                document.getElementById('addValor').value = item.valor;
+                document.getElementById('addData').value = item.data;
+                document.getElementById('addObs').value = item.obs;
+                
+                document.getElementById('tituloModal').innerText = 'Editar Venda';
+                toggleModal('modalNovo');
+            }
+        }
+
+        // MARCAR COMO PAGO
+        function marcarPago(id) {
+            const index = bdVendas.findIndex(i => i.id === id);
+            if(index !== -1) {
+                bdVendas[index].pago = true;
+                salvarLocal();
+                renderizarSistema();
+            }
+        }
+
+        // DELETAR ITEM
+        function deletarItem(id) {
+            if(confirm("Excluir este lançamento permanentemente?")) {
+                bdVendas = bdVendas.filter(i => i.id !== id);
+                salvarLocal();
+                renderizarSistema();
+            }
+        }
+
+        // GRÁFICO (Chart.js)
+        function atualizarGrafico(pago, pendente, atrasado) {
+            const ctx = document.getElementById('graficoStatus').getContext('2d');
+            if (meuGrafico) meuGrafico.destroy();
+            
+            meuGrafico = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Em Caixa (Pago)', 'A Receber (Futuro)', 'Inadimplência'],
+                    datasets: [{
+                        data: [pago, pendente, atrasado],
+                        backgroundColor: ['#10b981', '#6366f1', '#f43f5e'],
+                        borderWidth: 0, hoverOffset: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } }
+            });
+        }
+    </script>
+</body>
+</html>
