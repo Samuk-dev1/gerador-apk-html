@@ -94,3 +94,4 @@ jobs:
       with:
         name: meu-aplicativo-apk
         path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 1
