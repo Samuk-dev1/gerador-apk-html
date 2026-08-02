@@ -1,1 +1,499 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#fff;text-align:center;}h1{font-size:16px;}</style></head><body><div><h1>Meu App</h1><p>Pronto!</p></div></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PetShop App</title>
+    <style>
+        :root {
+            --primary: #ff6b81;
+            --secondary: #ff4757;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2f3542;
+            --gray: #ced6e0;
+            --green: #2ed573;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            max-height: 100vh;
+            background-color: var(--bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        @media (min-width: 451px) {
+            .app-container {
+                height: 800px;
+                border-radius: 30px;
+            }
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        /* Conteúdo Dinâmico */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            padding-bottom: 70px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Cards e Layout */
+        .card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+
+        .stat-card h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-card p {
+            font-size: 0.8rem;
+            color: #747d8c;
+        }
+
+        /* Formulários e Inputs */
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: #fff;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .btn-green {
+            background-color: var(--green);
+            box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3);
+        }
+
+        /* Listas de itens salvos */
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .list-item {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .list-item span strong {
+            color: #2f3542;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff4757;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+        }
+
+        /* Navegação Inferior (Bottom Bar) */
+        nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #f1f2f6;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #a4b0be;
+            font-size: 0.75rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .nav-item span.icon {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        h2.section-title {
+            font-size: 1.1rem;
+            color: #2f3542;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1 id="header-title">🐾 PetShop Amigo Fiel</h1>
+        </header>
+
+        <div class="content">
+            <!-- TELA 1: DASHBOARD -->
+            <div id="screen-home" class="screen active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="stat-pets">0</h3>
+                        <p>Pets Cadastrados</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="stat-agendamentos">0</h3>
+                        <p>Agendamentos</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">📅 Próximos Atendimentos</h2>
+                    <div id="home-agenda-list" class="item-list">
+                        <p style="color: #a4b0be; font-size: 0.85rem; text-align: center;">Nenhum agendamento recente.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">✨ Acesso Rápido</h2>
+                    <button class="btn" onclick="switchScreen('pets', document.querySelectorAll('.nav-item')[1])" style="margin-bottom: 8px;">Cadastrar Novo Pet</button>
+                    <button class="btn btn-green" onclick="switchScreen('agenda', document.querySelectorAll('.nav-item')[2])">Novo Agendamento</button>
+                </div>
+            </div>
+
+            <!-- TELA 2: PETS E CLIENTES -->
+            <div id="screen-pets" class="screen">
+                <div class="card">
+                    <h2 class="section-title">🐶 Cadastro de Pet & Dono</h2>
+                    <input type="text" id="owner-name" placeholder="Nome do Tutor">
+                    <input type="text" id="owner-phone" placeholder="Telefone / WhatsApp">
+                    <input type="text" id="pet-name" placeholder="Nome do Pet">
+                    <select id="pet-species">
+                        <option value="Cachorro">Cachorro 🐕</option>
+                        <option value="Gato">Gato 🐈</option>
+                        <option value="Outro">Outro 🐇🦜</option>
+                    </select>
+                    <button class="btn" onclick="addPet()">Salvar Pet</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">📋 Lista de Pets</h2>
+                    <div id="pets-list" class="item-list">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA 3: AGENDA / SERVIÇOS -->
+            <div id="screen-agenda" class="screen">
+                <div class="card">
+                    <h2 class="section-title">✂️ Agendar Serviço</h2>
+                    <select id="agenda-pet-select">
+                        <option value="">Selecione o Pet...</option>
+                    </select>
+                    <select id="agenda-service">
+                        <option value="Banho e Tosa">Banho e Tosa 🚿</option>
+                        <option value="Consulta Veterinária">Consulta Veterinária 🩺</option>
+                        <option value="Hotelzinho">Hotelzinho 🏡</option>
+                        <option value="Tosa Higiênica">Tosa Higiênica ✂️</option>
+                    </select>
+                    <input type="date" id="agenda-date">
+                    <input type="time" id="agenda-time">
+                    <button class="btn btn-green" onclick="addAgenda()">Confirmar Agendamento</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">🗓️ Agenda de Serviços</h2>
+                    <div id="agenda-list" class="item-list">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA 4: PRODUTOS / PDV -->
+            <div id="screen-shop" class="screen">
+                <div class="card">
+                    <h2 class="section-title">🛍️ Produtos & Rações</h2>
+                    <div class="item-list">
+                        <div class="list-item">
+                            <span><strong>Ração Premium 10kg</strong><br><small>R$ 120,00</small></span>
+                            <button class="btn btn-green" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="vender('Ração Premium 10kg', 120)">Vender</button>
+                        </div>
+                        <div class="list-item">
+                            <span><strong>Brinquedo Mordedor</strong><br><small>R$ 25,00</small></span>
+                            <button class="btn btn-green" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="vender('Brinquedo Mordedor', 25)">Vender</button>
+                        </div>
+                        <div class="list-item">
+                            <span><strong>Tapete Higiênico (30 un)</strong><br><small>R$ 45,00</small></span>
+                            <button class="btn btn-green" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="vender('Tapete Higiênico', 45)">Vender</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <p style="font-size: 0.85rem; color: #747d8c;">Total de Vendas Registradas Hoje:</p>
+                    <h2 id="total-vendas" style="color: var(--green); font-size: 1.8rem; margin-top: 5px;">R$ 0,00</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navegação Inferior -->
+        <nav>
+            <button class="nav-item active" onclick="switchScreen('home', this)">
+                <span class="icon">🏠</span>
+                Início
+            </button>
+            <button class="nav-item" onclick="switchScreen('pets', this)">
+                <span class="icon">🐶</span>
+                Pets
+            </button>
+            <button class="nav-item" onclick="switchScreen('agenda', this)">
+                <span class="icon">📅</span>
+                Agenda
+            </button>
+            <button class="nav-item" onclick="switchScreen('shop', this)">
+                <span class="icon">🛍️</span>
+                Produtos
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        // Banco de Dados Local (LocalStorage)
+        let pets = JSON.parse(localStorage.getItem('petshop_pets')) || [];
+        let agendas = JSON.parse(localStorage.getItem('petshop_agendas')) || [];
+        let totalVendas = parseFloat(localStorage.getItem('petshop_vendas')) || 0;
+
+        // Alternar Telas
+        function switchScreen(screenId, element) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            element.classList.add('active');
+
+            const titles = {
+                'home': '🐾 PetShop Amigo Fiel',
+                'pets': '🐶 Gestão de Pets',
+                'agenda': '📅 Agenda de Atendimentos',
+                'shop': '🛍️ Vendas e Produtos'
+            };
+            document.getElementById('header-title').innerText = titles[screenId];
+            
+            atualizarInterface();
+        }
+
+        // Funções de Pets
+        function addPet() {
+            const owner = document.getElementById('owner-name').value;
+            const phone = document.getElementById('owner-phone').value;
+            const petName = document.getElementById('pet-name').value;
+            const species = document.getElementById('pet-species').value;
+
+            if(!owner || !petName) {
+                alert('Preencha o nome do tutor e do pet!');
+                return;
+            }
+
+            pets.push({ id: Date.now(), owner, phone, petName, species });
+            localStorage.setItem('petshop_pets', JSON.stringify(pets));
+
+            document.getElementById('owner-name').value = '';
+            document.getElementById('owner-phone').value = '';
+            document.getElementById('pet-name').value = '';
+
+            atualizarInterface();
+            alert('Pet cadastrado com sucesso! ✨');
+        }
+
+        function deletePet(id) {
+            pets = pets.filter(p => p.id !== id);
+            localStorage.setItem('petshop_pets', JSON.stringify(pets));
+            atualizarInterface();
+        }
+
+        // Funções de Agenda
+        function addAgenda() {
+            const petSelect = document.getElementById('agenda-pet-select').value;
+            const service = document.getElementById('agenda-service').value;
+            const date = document.getElementById('agenda-date').value;
+            const time = document.getElementById('agenda-time').value;
+
+            if(!petSelect || !date || !time) {
+                alert('Preencha todos os campos do agendamento!');
+                return;
+            }
+
+            agendas.push({ id: Date.now(), pet: petSelect, service, date, time });
+            localStorage.setItem('petshop_agendas', JSON.stringify(agendas));
+
+            document.getElementById('agenda-date').value = '';
+            document.getElementById('agenda-time').value = '';
+
+            atualizarInterface();
+            alert('Serviço agendado com sucesso! 📅');
+        }
+
+        function deleteAgenda(id) {
+            agendas = agendas.filter(a => a.id !== id);
+            localStorage.setItem('petshop_agendas', JSON.stringify(agendas));
+            atualizarInterface();
+        }
+
+        // Sistema de Vendas Simples
+        function vender(produto, valor) {
+            totalVendas += valor;
+            localStorage.setItem('petshop_vendas', totalVendas);
+            atualizarInterface();
+            alert(`Venda registrada: ${produto} (R$ ${valor.toFixed(2)}) ✅`);
+        }
+
+        // Atualizar todas as telas e selects
+        function atualizarInterface() {
+            // Stats
+            document.getElementById('stat-pets').innerText = pets.length;
+            document.getElementById('stat-agendamentos').innerText = agendas.length;
+            document.getElementById('total-vendas').innerText = `R$ ${totalVendas.toFixed(2)}`;
+
+            // Lista de Pets
+            const petsListHtml = pets.length ? pets.map(p => `
+                <div class="list-item">
+                    <span><strong>${p.petName}</strong> (${p.species})<br><small>Tutor: ${p.owner} - ${p.phone}</small></span>
+                    <button class="delete-btn" onclick="deletePet(${p.id})">🗑️</button>
+                </div>
+            `).join('') : '<p style="color: #a4b0be; font-size: 0.85rem; text-align: center;">Nenhum pet cadastrado.</p>';
+            document.getElementById('pets-list').innerHTML = petsListHtml;
+
+            // Select de Pets no Agendamento
+            const selectHtml = '<option value="">Selecione o Pet...</option>' + pets.map(p => `<option value="${p.petName} (${p.owner})">${p.petName} - ${p.owner}</option>`).join('');
+            document.getElementById('agenda-pet-select').innerHTML = selectHtml;
+
+            // Lista de Agendamentos
+            const agendaListHtml = agendas.length ? agendas.map(a => `
+                <div class="list-item">
+                    <span><strong>${a.pet}</strong><br><small>${a.service} | ${a.date.split('-').reverse().join('/')} às ${a.time}</small></span>
+                    <button class="delete-btn" onclick="deleteAgenda(${a.id})">🗑️</button>
+                </div>
+            `).join('') : '<p style="color: #a4b0be; font-size: 0.85rem; text-align: center;">Nenhum agendamento ativo.</p>';
+            
+            document.getElementById('agenda-list').innerHTML = agendaListHtml;
+            document.getElementById('home-agenda-list').innerHTML = agendaListHtml;
+        }
+
+        // Carregar dados iniciais ao abrir o app
+        atualizarInterface();
+    </script>
+</body>
+</html>
