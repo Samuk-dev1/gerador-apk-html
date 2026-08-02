@@ -37,8 +37,17 @@ jobs:
         mkdir -p www
         cp index.html www/index.html
         
-        npx cap init MeuApp com.meuapp.gerador --web-dir www
+        APP_NAME="${{ github.event.inputs.app_name }}"
+        
+        # Inicializa o Capacitor usando o nome digitado pelo usuário
+        npx cap init "$APP_NAME" com.meuapp.gerador --web-dir www
         npx cap add android
+
+        # Aplica o nome exato no arquivo de strings nativo do Android
+        STRINGS_FILE="android/app/src/main/res/values/strings.xml"
+        if [ -f "$STRINGS_FILE" ]; then
+          sed -i "s/<string name=\"app_name\">.*<\/string>/<string name=\"app_name\">$APP_NAME<\/string>/" "$STRINGS_FILE"
+        fi
 
         # Se o usuário enviou uma logo, ajusta ela automaticamente para o padrão de ícones do Android
         if [ -f logo.png ]; then
