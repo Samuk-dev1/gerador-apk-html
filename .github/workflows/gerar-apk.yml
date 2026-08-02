@@ -7,6 +7,10 @@ on:
         description: 'Nome do Aplicativo'
         required: true
         default: 'MeuApp'
+      enviou_logo:
+        description: 'Usuário enviou logo?'
+        required: false
+        default: 'nao'
 
 jobs:
   build:
@@ -37,8 +41,12 @@ jobs:
         mkdir -p www
         cp index.html www/index.html
 
-        # Limpa qualquer logo antiga que sobrou do build anterior para evitar herdar a imagem de outro usuário
-        rm -f logo.png
+        # SÓ APAGA SE O USUÁRIO DE FATO NÃO TIVER ENVIADO NENHUMA LOGO
+        ENVIOU_LOGO="${{ github.event.inputs.enviou_logo }}"
+        if [ "$ENVIOU_LOGO" = "nao" ]; then
+          echo "Nenhuma logo nova foi enviada. Limpando a logo do cliente anterior..."
+          rm -f logo.png
+        fi
         
         APP_NAME="${{ github.event.inputs.app_name }}"
         
