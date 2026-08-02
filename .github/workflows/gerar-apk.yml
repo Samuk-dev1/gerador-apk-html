@@ -44,12 +44,26 @@ jobs:
         npx cap add android
         npx cap sync android
 
-    - name: Aplicar Nome do App
+    - name: Aplicar Nome e Logo Personalizada (se enviada)
       run: |
         APP_NAME="${{ github.event.inputs.app_name }}"
         STRINGS_FILE="android/app/src/main/res/values/strings.xml"
         if [ -f "$STRINGS_FILE" ]; then
           sed -i "s/<string name=\"app_name\">.*<\/string>/<string name=\"app_name\">$APP_NAME<\/string>/" "$STRINGS_FILE"
+        fi
+
+        # Se houver logo enviada pelo usuário, aplica como ícone do app
+        if [ -f logo.png ]; then
+          echo "Logo personalizada encontrada! Aplicando aos ícones..."
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            MIPMAP_DIR="android/app/src/main/res/mipmap-$d"
+            if [ -d "$MIPMAP_DIR" ]; then
+              cp logo.png "$MIPMAP_DIR/ic_launcher.png"
+              cp logo.png "$MIPMAP_DIR/ic_launcher_round.png"
+              rm -f "$MIPMAP_DIR/ic_launcher.xml"
+              rm -f "$MIPMAP_DIR/ic_launcher_round.xml"
+            fi
+          done
         fi
 
     - name: Compilar APK de Debug
