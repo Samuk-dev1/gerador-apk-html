@@ -1,1 +1,781 @@
-fgyufuttftyftfty
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPTV Pro - Gestor Completo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; overflow-x: hidden; }
+        
+        /* Sidebar */
+        .sidebar { position: fixed; left: -280px; top: 0; width: 280px; height: 100%; background: linear-gradient(180deg, #0f0c29, #302b63, #24243e); color: #fff; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1050; padding: 20px; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.3); }
+        .sidebar.active { left: 0; }
+        .sidebar .brand { font-size: 22px; font-weight: 700; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; color: #fff; }
+        .sidebar .brand i { color: #e94560; font-size: 28px; }
+        .sidebar a { display: flex; align-items: center; padding: 13px 18px; color: #b0b0c8; text-decoration: none; border-radius: 12px; margin-bottom: 6px; transition: 0.3s; font-weight: 500; }
+        .sidebar a:hover, .sidebar a.active { background: rgba(233, 69, 96, 0.25); color: #fff; transform: translateX(5px); }
+        .sidebar a i { width: 28px; font-size: 18px; margin-right: 12px; }
+        .sidebar .badge { margin-left: auto; background: #e94560; color: #fff; font-size: 11px; }
+        
+        /* Overlay */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 1040; backdrop-filter: blur(3px); }
+        .overlay.active { display: block; }
+        
+        /* Topbar */
+        .topbar { background: #fff; padding: 15px 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .topbar .menu-toggle { font-size: 24px; cursor: pointer; color: #302b63; margin-right: 20px; transition: 0.3s; }
+        .topbar .menu-toggle:hover { color: #e94560; }
+        .topbar h5 { margin: 0; font-weight: 700; color: #302b63; }
+        .topbar .user-info { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .topbar .user-info i { font-size: 20px; color: #888; cursor: pointer; }
+        
+        /* Content */
+        .content { padding: 25px; max-width: 1400px; margin: 0 auto; }
+        
+        /* Cards */
+        .card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 24px; background: #fff; transition: 0.3s; }
+        .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+        .card-header { background: transparent; border-bottom: 1px solid #f0f0f0; font-weight: 700; padding: 18px 24px; color: #302b63; }
+        .card-body { padding: 24px; }
+        
+        /* Stat Cards */
+        .stat-card { text-align: center; padding: 25px 15px; border-radius: 16px; background: #fff; position: relative; overflow: hidden; }
+        .stat-card .icon-wrapper { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 28px; }
+        .stat-card h2 { font-weight: 800; margin: 0; color: #302b63; font-size: 32px; }
+        .stat-card p { color: #888; margin: 5px 0 0; font-size: 14px; font-weight: 500; }
+        .stat-card .bg-primary { background: rgba(48, 43, 99, 0.12); color: #302b63; }
+        .stat-card .bg-danger { background: rgba(233, 69, 96, 0.12); color: #e94560; }
+        .stat-card .bg-warning { background: rgba(255, 193, 7, 0.12); color: #f39c12; }
+        .stat-card .bg-success { background: rgba(40, 167, 69, 0.12); color: #28a745; }
+        
+        /* Buttons */
+        .btn-action { border-radius: 50px; padding: 6px 14px; font-size: 13px; font-weight: 600; border: none; transition: 0.3s; margin: 2px; }
+        .btn-action:hover { transform: scale(1.05); }
+        .btn-whatsapp { background: #25D366; color: #fff; }
+        .btn-whatsapp:hover { background: #1da851; color: #fff; }
+        .btn-edit { background: #007bff; color: #fff; }
+        .btn-edit:hover { background: #0056b3; color: #fff; }
+        .btn-remind { background: #ffc107; color: #333; }
+        .btn-remind:hover { background: #e0a800; color: #333; }
+        .btn-renew { background: #28a745; color: #fff; }
+        .btn-renew:hover { background: #218838; color: #fff; }
+        .btn-delete { background: #dc3545; color: #fff; }
+        .btn-delete:hover { background: #c82333; color: #fff; }
+        
+        /* Table */
+        .table-responsive { border-radius: 12px; overflow: hidden; }
+        .table th { background: #f8f9fa; font-weight: 700; color: #302b63; border-bottom: 2px solid #eee; }
+        .table td { vertical-align: middle; padding: 14px 12px; }
+        .status-badge { padding: 4px 14px; border-radius: 50px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-expired { background: #f8d7da; color: #721c24; }
+        .status-warning { background: #fff3cd; color: #856404; }
+        
+        /* Modal */
+        .modal-content { border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .modal-header { border-bottom: none; padding: 20px 25px; }
+        .modal-body { padding: 20px 25px; }
+        .modal-footer { border-top: none; padding: 15px 25px; }
+        
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 768px) { 
+            .topbar { padding: 12px 15px; }
+            .content { padding: 15px; }
+            .stat-card h2 { font-size: 26px; }
+            .btn-action { font-size: 11px; padding: 4px 10px; }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #302b63; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="brand">
+            <i class="fas fa-satellite-dish"></i> IPTV Pro
+        </div>
+        <a href="#" class="active" data-section="dashboard">
+            <i class="fas fa-chart-pie"></i> Dashboard
+            <span class="badge">5</span>
+        </a>
+        <a href="#" data-section="clientes">
+            <i class="fas fa-users"></i> Clientes
+            <span class="badge" id="clientCountBadge">0</span>
+        </a>
+        <a href="#" data-section="planos">
+            <i class="fas fa-list-ul"></i> Planos
+        </a>
+        <a href="#" data-section="configuracoes">
+            <i class="fas fa-cog"></i> Configurações
+        </a>
+        <a href="#" data-section="templates">
+            <i class="fas fa-file-alt"></i> Templates
+        </a>
+        <div style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+            <a href="#" style="color: #e94560;" onclick="if(confirm('Sair do sistema?')){localStorage.clear();location.reload();}">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+        <h5 id="pageTitle">Dashboard</h5>
+        <div class="user-info">
+            <i class="fas fa-bell"></i>
+            <i class="fas fa-user-circle" style="font-size: 28px; color: #302b63;"></i>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="content">
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="section active">
+            <div class="row g-4 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="icon-wrapper bg-primary"><i class="fas fa-users"></i></div>
+                        <h2 id="totalClientes">0</h2>
+                        <p>Total de Clientes</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="icon-wrapper bg-success"><i class="fas fa-check-circle"></i></div>
+                        <h2 id="ativosCount">0</h2>
+                        <p>Ativos</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="icon-wrapper bg-warning"><i class="fas fa-clock"></i></div>
+                        <h2 id="vencendoCount">0</h2>
+                        <p>Vencendo Hoje</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="icon-wrapper bg-danger"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h2 id="vencidosCount">0</h2>
+                        <p>Vencidos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Vendas por Mês</div>
+                        <div class="card-body" style="height: 280px;">
+                            <canvas id="chartVendas"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Status dos Clientes</div>
+                        <div class="card-body" style="height: 280px;">
+                            <canvas id="chartStatus"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENTES -->
+        <div id="clientes" class="section">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span><i class="fas fa-users me-2"></i> Lista de Clientes</span>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCliente">
+                        <i class="fas fa-plus me-1"></i> Novo Cliente
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Nome</th>
+                                    <th>WhatsApp</th>
+                                    <th>Plano</th>
+                                    <th>Vencimento</th>
+                                    <th>Status</th>
+                                    <th style="width: 220px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientesTableBody">
+                                <!-- Linhas serão geradas via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-3 text-center text-muted" id="emptyMessage">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>Nenhum cliente cadastrado. Clique em "Novo Cliente".
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLANOS -->
+        <div id="planos" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-list-ul me-2"></i> Planos Disponíveis</div>
+                <div class="card-body">
+                    <div class="row g-3" id="planosContainer">
+                        <div class="col-md-4">
+                            <div class="card text-center p-4 h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #f8f9fa, #fff);">
+                                <h5 class="fw-bold text-primary">Básico</h5>
+                                <h3 class="fw-bold">R$ 29,90</h3>
+                                <p class="text-muted"><i class="fas fa-tv me-1"></i> 1 Dispositivo</p>
+                                <p class="text-muted small">HD + 50 canais</p>
+                                <button class="btn btn-outline-primary mt-2" onclick="editarPlano('Básico', '29,90', '1')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center p-4 h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #e8f0fe, #fff);">
+                                <h5 class="fw-bold text-success">Premium</h5>
+                                <h3 class="fw-bold">R$ 49,90</h3>
+                                <p class="text-muted"><i class="fas fa-tv me-1"></i> 2 Dispositivos</p>
+                                <p class="text-muted small">FHD + 150 canais</p>
+                                <button class="btn btn-outline-success mt-2" onclick="editarPlano('Premium', '49,90', '2')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center p-4 h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #fce4ec, #fff);">
+                                <h5 class="fw-bold text-danger">Ultra</h5>
+                                <h3 class="fw-bold">R$ 79,90</h3>
+                                <p class="text-muted"><i class="fas fa-tv me-1"></i> 4 Dispositivos</p>
+                                <p class="text-muted small">4K + 300 canais</p>
+                                <button class="btn btn-outline-danger mt-2" onclick="editarPlano('Ultra', '79,90', '4')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIGURAÇÕES -->
+        <div id="configuracoes" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-cog me-2"></i> Configurações Gerais</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="fw-bold">Nome da Empresa</label>
+                            <input type="text" class="form-control" id="configNome" value="IPTV Pro" onchange="salvarConfig()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Telefone de Suporte (com DDD)</label>
+                            <input type="text" class="form-control" id="configTelefone" value="(11) 99999-9999" onchange="salvarConfig()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Cor Primária do Sistema</label>
+                            <input type="color" class="form-control form-control-color" id="configCor" value="#302b63" onchange="salvarConfig()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Tempo de Aviso (dias antes de vencer)</label>
+                            <input type="number" class="form-control" id="configAviso" value="3" onchange="salvarConfig()">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" onclick="salvarConfig()"><i class="fas fa-save me-1"></i> Salvar Configurações</button>
+                    <div class="alert alert-success mt-3" id="configAlert" style="display:none;">Configurações salvas com sucesso!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEMPLATES -->
+        <div id="templates" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-file-alt me-2"></i> Templates de Mensagem</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="fw-bold">Lembrete de Vencimento</label>
+                        <textarea class="form-control" id="templateLembrete" rows="4">Olá {nome}, seu plano "{plano}" vence em {data}. Renove agora para não perder o acesso! 🚀</textarea>
+                        <small class="text-muted">Use: {nome}, {plano}, {data}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Mensagem de Renovação</label>
+                        <textarea class="form-control" id="templateRenovacao" rows="3">Parabéns {nome}! Seu plano foi renovado com sucesso até {data}. Obrigado pela preferência! 🎉</textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="salvarTemplates()"><i class="fas fa-save me-1"></i> Salvar Templates</button>
+                    <div class="alert alert-success mt-3" id="templateAlert" style="display:none;">Templates salvos com sucesso!</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal de Cliente -->
+    <div class="modal fade" id="modalCliente" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle"><i class="fas fa-user-plus me-2"></i> Novo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="clienteId">
+                    <div class="mb-3">
+                        <label class="fw-bold">Nome Completo</label>
+                        <input type="text" class="form-control" id="clienteNome" placeholder="Ex: João Silva">
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">WhatsApp (com DDD)</label>
+                        <input type="text" class="form-control" id="clienteWhatsapp" placeholder="(11) 99999-9999">
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Plano</label>
+                        <select class="form-select" id="clientePlano">
+                            <option value="Básico">Básico - R$ 29,90</option>
+                            <option value="Premium" selected>Premium - R$ 49,90</option>
+                            <option value="Ultra">Ultra - R$ 79,90</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Data de Vencimento</label>
+                        <input type="date" class="form-control" id="clienteVencimento">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="salvarCliente()"><i class="fas fa-save me-1"></i> Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================================
+        // 1. Gerenciamento de Dados (localStorage)
+        // ============================================================
+
+        let clientes = [];
+        let chartVendas = null;
+        let chartStatus = null;
+
+        function carregarDados() {
+            const data = localStorage.getItem('iptv_clientes');
+            clientes = data ? JSON.parse(data) : [];
+            // Dados iniciais se estiver vazio
+            if (clientes.length === 0) {
+                clientes = [
+                    { id: 1, nome: 'João Silva', whatsapp: '(11) 91234-5678', plano: 'Premium', vencimento: '2026-08-10' },
+                    { id: 2, nome: 'Maria Oliveira', whatsapp: '(11) 98765-4321', plano: 'Básico', vencimento: '2026-08-05' },
+                    { id: 3, nome: 'Carlos Souza', whatsapp: '(21) 99876-5432', plano: 'Ultra', vencimento: '2026-07-25' }
+                ];
+                salvarDados();
+            }
+            renderizarClientes();
+            atualizarDashboard();
+            atualizarBadge();
+        }
+
+        function salvarDados() {
+            localStorage.setItem('iptv_clientes', JSON.stringify(clientes));
+            salvarConfig();
+            salvarTemplates();
+        }
+
+        function proximoId() {
+            return clientes.length > 0 ? Math.max(...clientes.map(c => c.id)) + 1 : 1;
+        }
+
+        // ============================================================
+        // 2. CRUD de Clientes
+        // ============================================================
+
+        function abrirModalCliente(id = null) {
+            document.getElementById('clienteId').value = id || '';
+            document.getElementById('modalTitle').innerHTML = id ? '<i class="fas fa-edit me-2"></i> Editar Cliente' : '<i class="fas fa-user-plus me-2"></i> Novo Cliente';
+            
+            if (id) {
+                const cliente = clientes.find(c => c.id === parseInt(id));
+                if (cliente) {
+                    document.getElementById('clienteNome').value = cliente.nome;
+                    document.getElementById('clienteWhatsapp').value = cliente.whatsapp;
+                    document.getElementById('clientePlano').value = cliente.plano;
+                    document.getElementById('clienteVencimento').value = cliente.vencimento;
+                }
+            } else {
+                document.getElementById('clienteNome').value = '';
+                document.getElementById('clienteWhatsapp').value = '';
+                document.getElementById('clientePlano').value = 'Premium';
+                document.getElementById('clienteVencimento').value = new Date().toISOString().split('T')[0];
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalCliente'));
+            modal.show();
+        }
+
+        function salvarCliente() {
+            const id = document.getElementById('clienteId').value;
+            const nome = document.getElementById('clienteNome').value.trim();
+            const whatsapp = document.getElementById('clienteWhatsapp').value.trim();
+            const plano = document.getElementById('clientePlano').value;
+            const vencimento = document.getElementById('clienteVencimento').value;
+
+            if (!nome || !whatsapp || !vencimento) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            if (id) {
+                // Editar
+                const index = clientes.findIndex(c => c.id === parseInt(id));
+                if (index !== -1) {
+                    clientes[index] = { ...clientes[index], nome, whatsapp, plano, vencimento };
+                }
+            } else {
+                // Novo
+                clientes.push({ id: proximoId(), nome, whatsapp, plano, vencimento });
+            }
+
+            salvarDados();
+            renderizarClientes();
+            atualizarDashboard();
+            atualizarBadge();
+            
+            bootstrap.Modal.getInstance(document.getElementById('modalCliente')).hide();
+        }
+
+        function excluirCliente(id) {
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                clientes = clientes.filter(c => c.id !== parseInt(id));
+                salvarDados();
+                renderizarClientes();
+                atualizarDashboard();
+                atualizarBadge();
+            }
+        }
+
+        function editarCliente(id) {
+            abrirModalCliente(id);
+        }
+
+        // ============================================================
+        // 3. Ações dos Botões
+        // ============================================================
+
+        function enviarWhatsapp(id) {
+            const cliente = clientes.find(c => c.id === parseInt(id));
+            if (!cliente) return;
+            const url = `https://api.whatsapp.com/send?phone=55${cliente.whatsapp.replace(/\D/g, '')}&text=Olá ${cliente.nome}! Como vai?`;
+            window.open(url, '_blank');
+        }
+
+        function enviarLembrete(id) {
+            const cliente = clientes.find(c => c.id === parseInt(id));
+            if (!cliente) return;
+            
+            const template = localStorage.getItem('iptv_template_lembrete') || 'Olá {nome}, seu plano "{plano}" vence em {data}. Renove agora! 🚀';
+            const msg = template
+                .replace('{nome}', cliente.nome)
+                .replace('{plano}', cliente.plano)
+                .replace('{data}', formatarData(cliente.vencimento));
+            
+            const url = `https://api.whatsapp.com/send?phone=55${cliente.whatsapp.replace(/\D/g, '')}&text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        }
+
+        function renovarCliente(id) {
+            const cliente = clientes.find(c => c.id === parseInt(id));
+            if (!cliente) return;
+            
+            // Adiciona 30 dias
+            const novaData = new Date(cliente.vencimento);
+            novaData.setDate(novaData.getDate() + 30);
+            cliente.vencimento = novaData.toISOString().split('T')[0];
+            
+            salvarDados();
+            renderizarClientes();
+            atualizarDashboard();
+            
+            const template = localStorage.getItem('iptv_template_renovacao') || 'Parabéns {nome}! Seu plano foi renovado com sucesso até {data}. Obrigado pela preferência! 🎉';
+            const msg = template
+                .replace('{nome}', cliente.nome)
+                .replace('{data}', formatarData(cliente.vencimento));
+            
+            if (confirm(`Renovar plano de ${cliente.nome} por mais 30 dias? Enviar mensagem de confirmação?`)) {
+                const url = `https://api.whatsapp.com/send?phone=55${cliente.whatsapp.replace(/\D/g, '')}&text=${encodeURIComponent(msg)}`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // ============================================================
+        // 4. Renderização e Dashboard
+        // ============================================================
+
+        function formatarData(dataStr) {
+            if (!dataStr) return '-';
+            const partes = dataStr.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        function getStatus(vencimento) {
+            const hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            const venc = new Date(vencimento + 'T00:00:00');
+            
+            if (venc < hoje) return { label: 'Vencido', class: 'status-expired' };
+            const diff = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
+            if (diff <= 3) return { label: 'Vence em breve', class: 'status-warning' };
+            return { label: 'Ativo', class: 'status-active' };
+        }
+
+        function renderizarClientes() {
+            const tbody = document.getElementById('clientesTableBody');
+            const emptyMsg = document.getElementById('emptyMessage');
+            
+            if (clientes.length === 0) {
+                tbody.innerHTML = '';
+                emptyMsg.style.display = 'block';
+                return;
+            }
+            emptyMsg.style.display = 'none';
+            
+            tbody.innerHTML = clientes.map(cliente => {
+                const status = getStatus(cliente.vencimento);
+                return `
+                    <tr>
+                        <td>${cliente.id}</td>
+                        <td><strong>${cliente.nome}</strong></td>
+                        <td>${cliente.whatsapp}</td>
+                        <td><span class="badge bg-secondary">${cliente.plano}</span></td>
+                        <td>${formatarData(cliente.vencimento)}</td>
+                        <td><span class="status-badge ${status.class}">${status.label}</span></td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="editarCliente(${cliente.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn-action btn-whatsapp" onclick="enviarWhatsapp(${cliente.id})" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                            <button class="btn-action btn-remind" onclick="enviarLembrete(${cliente.id})" title="Enviar Lembrete"><i class="fas fa-bell"></i></button>
+                            <button class="btn-action btn-renew" onclick="renovarCliente(${cliente.id})" title="Renovar"><i class="fas fa-sync"></i></button>
+                            <button class="btn-action btn-delete" onclick="excluirCliente(${cliente.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function atualizarDashboard() {
+            const total = clientes.length;
+            document.getElementById('totalClientes').textContent = total;
+            document.getElementById('clientCountBadge').textContent = total;
+            
+            const hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            
+            let ativos = 0, vencendoHoje = 0, vencidos = 0;
+            
+            clientes.forEach(c => {
+                const venc = new Date(c.vencimento + 'T00:00:00');
+                if (venc >= hoje) {
+                    ativos++;
+                    const diff = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
+                    if (diff === 0) vencendoHoje++;
+                } else {
+                    vencidos++;
+                }
+            });
+            
+            document.getElementById('ativosCount').textContent = ativos;
+            document.getElementById('vencendoCount').textContent = vencendoHoje;
+            document.getElementById('vencidosCount').textContent = vencidos;
+            
+            atualizarGraficos();
+        }
+
+        function atualizarBadge() {
+            document.getElementById('clientCountBadge').textContent = clientes.length;
+        }
+
+        // ============================================================
+        // 5. Gráficos
+        // ============================================================
+
+        function atualizarGraficos() {
+            // Gráfico de Status
+            const ativos = clientes.filter(c => getStatus(c.vencimento).label === 'Ativo').length;
+            const vencidos = clientes.filter(c => getStatus(c.vencimento).label === 'Vencido').length;
+            const aviso = clientes.filter(c => getStatus(c.vencimento).label === 'Vence em breve').length;
+            
+            if (chartStatus) chartStatus.destroy();
+            chartStatus = new Chart(document.getElementById('chartStatus'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ativos', 'Vencidos', 'Vence em breve'],
+                    datasets: [{
+                        data: [ativos, vencidos, aviso],
+                        backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // Gráfico de Vendas (simulado com base nos vencimentos)
+            if (chartVendas) chartVendas.destroy();
+            const vendasMensais = Array(12).fill(0);
+            clientes.forEach(c => {
+                const mes = new Date(c.vencimento + 'T00:00:00').getMonth();
+                vendasMensais[mes]++;
+            });
+            
+            chartVendas = new Chart(document.getElementById('chartVendas'), {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    datasets: [{
+                        label: 'Renovações',
+                        data: vendasMensais,
+                        backgroundColor: '#e94560',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        // ============================================================
+        // 6. Configurações e Templates
+        // ============================================================
+
+        function salvarConfig() {
+            const nome = document.getElementById('configNome').value;
+            const telefone = document.getElementById('configTelefone').value;
+            const cor = document.getElementById('configCor').value;
+            const aviso = document.getElementById('configAviso').value;
+            
+            localStorage.setItem('iptv_config', JSON.stringify({ nome, telefone, cor, aviso }));
+            
+            // Aplica cor
+            document.querySelector(':root').style.setProperty('--bs-primary', cor);
+            document.querySelectorAll('.btn-primary, .bg-primary').forEach(el => {
+                el.style.backgroundColor = cor;
+                el.style.borderColor = cor;
+            });
+            
+            document.getElementById('configAlert').style.display = 'block';
+            setTimeout(() => document.getElementById('configAlert').style.display = 'none', 3000);
+        }
+
+        function carregarConfig() {
+            const data = localStorage.getItem('iptv_config');
+            if (data) {
+                const config = JSON.parse(data);
+                document.getElementById('configNome').value = config.nome || 'IPTV Pro';
+                document.getElementById('configTelefone').value = config.telefone || '(11) 99999-9999';
+                document.getElementById('configCor').value = config.cor || '#302b63';
+                document.getElementById('configAviso').value = config.aviso || '3';
+            }
+        }
+
+        function salvarTemplates() {
+            const lembrete = document.getElementById('templateLembrete').value;
+            const renovacao = document.getElementById('templateRenovacao').value;
+            localStorage.setItem('iptv_template_lembrete', lembrete);
+            localStorage.setItem('iptv_template_renovacao', renovacao);
+            
+            document.getElementById('templateAlert').style.display = 'block';
+            setTimeout(() => document.getElementById('templateAlert').style.display = 'none', 3000);
+        }
+
+        function carregarTemplates() {
+            const lembrete = localStorage.getItem('iptv_template_lembrete');
+            const renovacao = localStorage.getItem('iptv_template_renovacao');
+            if (lembrete) document.getElementById('templateLembrete').value = lembrete;
+            if (renovacao) document.getElementById('templateRenovacao').value = renovacao;
+        }
+
+        function editarPlano(nome, preco, dispositivos) {
+            alert(`Editar plano ${nome}\nPreço: R$ ${preco}\nDispositivos: ${dispositivos}\n\nEm uma versão full, você pode modificar esses dados.`);
+        }
+
+        // ============================================================
+        // 7. Menu e Navegação
+        // ============================================================
+
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        });
+
+        document.getElementById('overlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        });
+
+        document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const section = this.dataset.section;
+                
+                document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(section).classList.add('active');
+                
+                document.getElementById('pageTitle').textContent = 
+                    section.charAt(0).toUpperCase() + section.slice(1);
+                
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            });
+        });
+
+        // ============================================================
+        // 8. Inicialização
+        // ============================================================
+
+        window.onload = function() {
+            carregarConfig();
+            carregarTemplates();
+            carregarDados();
+            
+            // Preenche data atual no modal
+            document.getElementById('clienteVencimento').value = new Date().toISOString().split('T')[0];
+            
+            // Botão novo cliente
+            document.querySelector('[data-bs-target="#modalCliente"]').addEventListener('click', function() {
+                abrirModalCliente(null);
+            });
+        };
+    </script>
+</body>
+</html>
