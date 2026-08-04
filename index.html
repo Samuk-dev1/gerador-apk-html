@@ -1,1002 +1,767 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>IPTV Manager Pro - Dashboard Premium</title>
-    <!-- Font Awesome 6 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestor de Clientes · APK</title>
+    <!-- Ícone e estilo nativo -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --secondary: #ec4899;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --dark: #0f172a;
-            --darker: #020617;
-            --gray: #64748b;
-            --light: #f8fafc;
-            --card-bg: rgba(255,255,255,0.05);
-            --border: rgba(255,255,255,0.1);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            color: #f1f5f9;
-            overflow-x: hidden;
-        }
-
-        .bg-animation {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .bg-animation::before {
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(-2%, -2%) rotate(2deg); }
-        }
-
-        .app-container {
+            background: #eef2f7;
             display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 280px;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border);
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 100;
-        }
-
-        .sidebar-header {
-            padding: 32px 24px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 8px 20px rgba(99,102,241,0.3);
-        }
-
-        .logo h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, var(--primary-light));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .nav-menu {
-            padding: 0 16px;
-        }
-
-        .nav-item {
-            display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 14px 18px;
-            margin-bottom: 8px;
-            border-radius: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #94a3b8;
-            font-weight: 500;
-            position: relative;
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        /* Container estilo APK */
+        .phone-frame {
+            max-width: 420px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 36px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 8px #d0d7de;
             overflow: hidden;
+            padding: 18px 16px 24px;
+            position: relative;
+            transition: all 0.2s;
         }
 
-        .nav-item i {
-            width: 24px;
-            font-size: 1.2rem;
+        /* status bar fictícia */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1c1e24;
+            padding: 0 4px 12px 4px;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #e9edf2;
         }
 
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 3px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            transform: scaleY(0);
-            transition: transform 0.2s;
+        .status-bar i {
+            margin-right: 4px;
         }
 
-        .nav-item.active {
-            background: linear-gradient(90deg, rgba(99,102,241,0.2), transparent);
-            color: white;
-        }
-
-        .nav-item.active::before {
-            transform: scaleY(1);
-        }
-
-        .nav-item:hover:not(.active) {
-            background: rgba(255,255,255,0.05);
-            color: white;
-            transform: translateX(5px);
-        }
-
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            padding: 28px 36px;
-            overflow-y: auto;
-        }
-
-        .top-bar {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-            gap: 16px;
+            padding: 14px 0 10px;
         }
 
-        .page-title {
-            font-size: 2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fff, var(--primary-light));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0b1a33;
             letter-spacing: -0.5px;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
-            margin-bottom: 36px;
+        .header h1 i {
+            color: #2a7de1;
+            margin-right: 6px;
         }
 
-        .stat-card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 28px;
-            padding: 24px;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .stat-card:hover::before {
-            left: 100%;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 18px;
+        .header-actions button {
+            background: #f0f4fe;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a5fc7;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin-bottom: 18px;
-            font-size: 1.5rem;
+            gap: 6px;
         }
 
-        .stat-card h3 {
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #94a3b8;
-            margin-bottom: 8px;
+        .header-actions button i {
+            font-size: 16px;
         }
 
-        .stat-number {
-            font-size: 2.8rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fff, var(--primary-light));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+        .header-actions button:active {
+            background: #d9e5fd;
+            transform: scale(0.96);
         }
 
-        .charts-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 24px;
-            margin-bottom: 36px;
+        /* barra de busca */
+        .search-box {
+            background: #f2f5fa;
+            border-radius: 30px;
+            padding: 8px 18px;
+            margin: 10px 0 18px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #e0e6ef;
         }
 
-        .chart-card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 28px;
-            padding: 24px;
+        .search-box i {
+            color: #7e8b9f;
+            font-size: 16px;
+            margin-right: 12px;
         }
 
-        .chart-card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            color: #cbd5e1;
+        .search-box input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-size: 15px;
+            padding: 8px 0;
+            outline: none;
+            color: #1e293b;
         }
 
-        canvas {
-            max-height: 300px;
+        .search-box input::placeholder {
+            color: #9aa6b9;
+            font-weight: 400;
         }
 
-        .card-table {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 28px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-
-        .table-header {
+        /* contador + filtro */
+        .toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
+            margin: 6px 0 18px;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
-            padding: 12px 24px;
-            border-radius: 40px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(99,102,241,0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99,102,241,0.4);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary);
-            padding: 8px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            color: var(--primary-light);
-            transition: all 0.2s;
-        }
-
-        .btn-outline:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 16px 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        th {
-            color: #94a3b8;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        .badge {
+        .client-count {
+            background: #eef2f7;
             padding: 6px 14px;
             border-radius: 40px;
-            font-size: 0.75rem;
+            font-size: 13px;
             font-weight: 600;
+            color: #1f2a44;
         }
 
-        .badge-warning { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-        .badge-danger { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-        .badge-success { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
 
-        .action-icons i {
-            margin: 0 8px;
+        .filter-group button {
+            background: transparent;
+            border: 1px solid #d7dfe9;
+            border-radius: 30px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #2c3e5c;
+            transition: 0.1s;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1.1rem;
-            color: #94a3b8;
         }
 
-        .action-icons i:hover {
-            color: var(--primary);
-            transform: scale(1.1);
+        .filter-group button.active {
+            background: #1a5fc7;
+            border-color: #1a5fc7;
+            color: white;
         }
 
-        /* TEMPLATES - EDITOR PROFISSIONAL */
-        .templates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
+        .filter-group button:active {
+            opacity: 0.7;
         }
 
-        .template-card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            overflow: hidden;
-            transition: all 0.3s;
+        /* lista de clientes */
+        .client-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 4px 0 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
 
-        .template-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-3px);
+        .client-list::-webkit-scrollbar {
+            width: 4px;
         }
 
-        .template-header {
-            background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(236,72,153,0.2));
-            padding: 18px 24px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+        .client-list::-webkit-scrollbar-track {
+            background: #eef2f7;
+            border-radius: 10px;
         }
 
-        .template-header h3 {
-            font-size: 1.2rem;
+        .client-list::-webkit-scrollbar-thumb {
+            background: #bcc9db;
+            border-radius: 10px;
+        }
+
+        .client-item {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eef2f7;
+            transition: 0.12s;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .client-item:active {
+            background: #f8faff;
+            border-color: #cbd8ec;
+        }
+
+        .client-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .client-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #0b1a33;
+        }
+
+        .client-email {
+            font-size: 13px;
+            color: #4e607a;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
         }
 
-        .template-badge {
-            background: var(--primary);
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.7rem;
+        .client-email i {
+            font-size: 12px;
+            color: #7a8aa3;
+            width: 14px;
+        }
+
+        .client-tag {
+            font-size: 11px;
+            background: #e9eefa;
+            padding: 3px 10px;
+            border-radius: 30px;
+            color: #1a5fc7;
             font-weight: 600;
+            letter-spacing: 0.2px;
+            display: inline-block;
+            margin-top: 3px;
         }
 
-        .template-body {
-            padding: 24px;
-        }
-
-        .template-editor {
-            width: 100%;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 16px;
-            padding: 16px;
-            color: #e2e8f0;
-            font-family: 'Inter', monospace;
-            font-size: 0.85rem;
-            resize: vertical;
-            margin-bottom: 16px;
-            line-height: 1.5;
-        }
-
-        .template-editor:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .placeholders-bar {
+        .client-actions {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 12px;
+            gap: 6px;
         }
 
-        .placeholder-chip {
-            background: rgba(99,102,241,0.3);
-            border: 1px solid var(--primary);
-            padding: 5px 12px;
+        .client-actions button {
+            background: transparent;
+            border: none;
+            width: 36px;
+            height: 36px;
             border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: monospace;
-        }
-
-        .placeholder-chip:hover {
-            background: var(--primary);
-            transform: scale(1.05);
-        }
-
-        .preview-box {
-            background: rgba(0,0,0,0.4);
-            border-radius: 16px;
-            padding: 16px;
-            margin-top: 16px;
-            border-left: 3px solid var(--primary);
-        }
-
-        .preview-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary-light);
-            margin-bottom: 8px;
-        }
-
-        .preview-content {
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: #cbd5e1;
-            white-space: pre-wrap;
-        }
-
-        .test-select {
-            width: 100%;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 10px;
-            color: white;
-            margin-top: 12px;
-            cursor: pointer;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
+            display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            font-size: 16px;
+            color: #3d4f6b;
+            transition: 0.1s;
+            cursor: pointer;
         }
 
-        .modal-card {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            border: 1px solid var(--border);
-            border-radius: 32px;
-            padding: 32px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        .client-actions .edit-btn:active {
+            background: #e3ebf9;
+            color: #0f3f8a;
         }
 
-        .modal-card input, .modal-card select, .modal-card textarea {
+        .client-actions .delete-btn:active {
+            background: #ffe8e8;
+            color: #c72a2a;
+        }
+
+        /* formulário de add/editar */
+        .form-panel {
+            background: #f8faff;
+            border-radius: 24px;
+            padding: 18px 16px 20px;
+            margin: 12px 0 8px;
+            border: 1px solid #e3eaf3;
+            box-shadow: 0 6px 14px rgba(0, 20, 40, 0.04);
+            display: none;
+        }
+
+        .form-panel.open {
+            display: block;
+            animation: slideDown 0.25s ease;
+        }
+
+        .form-title {
+            font-weight: 700;
+            font-size: 17px;
+            color: #0b1a33;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-title i {
+            color: #1a5fc7;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2a44;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .form-group input {
             width: 100%;
-            padding: 12px 16px;
-            margin: 8px 0 20px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid var(--border);
-            border-radius: 16px;
+            padding: 12px 14px;
+            border: 1px solid #d7dfe9;
+            border-radius: 20px;
+            font-size: 15px;
+            background: white;
+            transition: 0.15s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #1a5fc7;
+            box-shadow: 0 0 0 3px rgba(26, 95, 199, 0.15);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 700;
+            font-size: 15px;
+            transition: 0.1s;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: #1a5fc7;
             color: white;
         }
 
-        @media (max-width: 768px) {
-            .sidebar { width: 80px; }
-            .sidebar .logo h2, .sidebar .nav-item span { display: none; }
-            .main-content { margin-left: 80px; padding: 20px; }
-            .charts-row { grid-template-columns: 1fr; }
-            .templates-grid { grid-template-columns: 1fr; }
+        .btn-save:active {
+            background: #114a9c;
+            transform: scale(0.97);
         }
 
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        .btn-cancel {
+            background: #e9eef6;
+            color: #1f2a44;
+        }
+
+        .btn-cancel:active {
+            background: #d5dde9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 10px;
+            color: #6f7f97;
+        }
+
+        .empty-state i {
+            font-size: 42px;
+            color: #cbd6e6;
+            margin-bottom: 12px;
+        }
+
+        /* animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* responsivo */
+        @media (max-width: 480px) {
+            .phone-frame {
+                border-radius: 28px;
+                padding: 14px 12px 18px;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="bg-animation"></div>
-<div class="app-container">
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <div class="logo-icon"><i class="fas fa-tv"></i></div>
-                <h2>IPTV Manager<br><span style="font-size: 0.7rem;">Pro Suite</span></h2>
-            </div>
-        </div>
-        <div class="nav-menu">
-            <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></div>
-            <div class="nav-item" data-page="clientes"><i class="fas fa-users"></i><span>Clientes</span></div>
-            <div class="nav-item" data-page="templates"><i class="fas fa-envelope-open-text"></i><span>Templates</span></div>
-            <div class="nav-item" data-page="cobrancas"><i class="fas fa-credit-card"></i><span>Cobranças</span></div>
-            <div class="nav-item" data-page="configuracoes"><i class="fas fa-sliders-h"></i><span>Configurações</span></div>
-            <div class="nav-item" data-page="relatorios"><i class="fas fa-chart-line"></i><span>Relatórios</span></div>
-            <div class="nav-item" data-page="suporte"><i class="fas fa-headset"></i><span>Suporte</span></div>
-            <div class="nav-item" data-page="backup"><i class="fas fa-database"></i><span>Backup</span></div>
+<div class="phone-frame">
+    <!-- status -->
+    <div class="status-bar">
+        <span><i class="fas fa-signal"></i> 5G <i class="fas fa-wifi"></i></span>
+        <span><i class="fas fa-clock"></i> 14:28</span>
+        <span><i class="fas fa-battery-three-quarters"></i> 86%</span>
+    </div>
+
+    <!-- cabeçalho -->
+    <div class="header">
+        <h1><i class="fas fa-users"></i>Clientes</h1>
+        <div class="header-actions">
+            <button id="addClientBtn"><i class="fas fa-plus-circle"></i> Novo</button>
         </div>
     </div>
 
-    <div class="main-content" id="mainContent">
-        <!-- DASHBOARD (MANTIDO ORIGINAL) -->
-        <div id="page-dashboard" class="page-content">
-            <div class="top-bar"><h1 class="page-title"><i class="fas fa-chart-line"></i> Dashboard Executivo</h1></div>
-            <div class="stats-grid" id="statsCards"></div>
-            <div class="charts-row">
-                <div class="chart-card"><h3><i class="fas fa-chart-bar"></i> Clientes por Status</h3><canvas id="statusChart"></canvas></div>
-                <div class="chart-card"><h3><i class="fas fa-chart-line"></i> Vencimentos (Próximos 30 dias)</h3><canvas id="vencimentoChart"></canvas></div>
-            </div>
-            <div class="card-table"><h3><i class="fas fa-clock"></i> Últimos Clientes</h3><div id="ultimosClientes"></div></div>
-        </div>
+    <!-- busca -->
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Pesquisar cliente...">
+    </div>
 
-        <!-- CLIENTES -->
-        <div id="page-clientes" class="page-content" style="display:none;">
-            <div class="top-bar"><h1 class="page-title">Clientes</h1><button class="btn-primary" id="btnAddCliente"><i class="fas fa-plus"></i> Novo Cliente</button></div>
-            <div class="card-table"><div id="listaClientesTable"></div></div>
+    <!-- toolbar -->
+    <div class="toolbar">
+        <span class="client-count" id="clientCounter">0 clientes</span>
+        <div class="filter-group">
+            <button class="active" data-filter="all">Todos</button>
+            <button data-filter="vip">VIP</button>
+            <button data-filter="regular">Regular</button>
         </div>
+    </div>
 
-        <!-- TEMPLATES - EDITOR PROFISSIONAL -->
-        <div id="page-templates" class="page-content" style="display:none;">
-            <div class="top-bar">
-                <h1 class="page-title"><i class="fas fa-envelope-open-text"></i> Templates de Mensagens</h1>
-                <button class="btn-primary" id="saveAllTemplates"><i class="fas fa-save"></i> Salvar Todos</button>
-            </div>
-            <div class="templates-grid" id="templatesGrid"></div>
-            <div class="card-table">
-                <h3><i class="fas fa-info-circle"></i> Placeholders Disponíveis</h3>
-                <div class="placeholders-bar" style="margin-top: 16px;">
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{nome}')">{nome}</div>
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{data_vencimento}')">{data_vencimento}</div>
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{dias}')">{dias}</div>
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{valor}')">{valor}</div>
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{empresa}')">{empresa}</div>
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{suporte}')">{suporte}</div>
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{link_pagamento}')">{link_pagamento}</div>
-                    <div class="placeholder-chip" onclick="copyPlaceholder('{data_atual}')">{data_atual}</div>
-                </div>
-                <p style="margin-top: 12px; font-size: 0.75rem; color: #94a3b8;"><i class="fas fa-mouse-pointer"></i> Clique nos placeholders para copiar</p>
-            </div>
-        </div>
+    <!-- lista -->
+    <div class="client-list" id="clientListContainer">
+        <!-- renderizado via js -->
+    </div>
 
-        <!-- COBRANÇAS -->
-        <div id="page-cobrancas" class="page-content" style="display:none;">
-            <div class="top-bar"><h1 class="page-title">Cobranças</h1><button class="btn-primary" id="gerarCobrancaBtn"><i class="fas fa-paper-plane"></i> Gerar Cobrança</button></div>
-            <div class="card-table"><h3>Histórico</h3><div id="historicoCobrancas"></div></div>
+    <!-- painel formulário -->
+    <div class="form-panel" id="formPanel">
+        <div class="form-title"><i class="fas fa-pen-fancy"></i> <span id="formTitle">Novo cliente</span></div>
+        <div class="form-group">
+            <label>Nome completo</label>
+            <input type="text" id="clientNameInput" placeholder="Ex: Ana Silva" maxlength="40">
         </div>
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="clientEmailInput" placeholder="ana@email.com">
+        </div>
+        <div class="form-group" style="margin-bottom:6px;">
+            <label>Tipo</label>
+            <select id="clientTypeInput" style="width:100%; padding:12px 14px; border-radius:20px; border:1px solid #d7dfe9; background:white; font-size:15px; outline:none;">
+                <option value="regular">Regular</option>
+                <option value="vip">VIP</option>
+            </select>
+        </div>
+        <div class="form-actions">
+            <button class="btn-cancel" id="cancelFormBtn">Cancelar</button>
+            <button class="btn-save" id="saveClientBtn"><i class="fas fa-check"></i> Salvar</button>
+        </div>
+        <input type="hidden" id="editClientId" value="">
+    </div>
 
-        <!-- CONFIGURAÇÕES -->
-        <div id="page-configuracoes" class="page-content" style="display:none;">
-            <div class="top-bar"><h1 class="page-title">Configurações</h1></div>
-            <div class="card-table"><h3>Empresa</h3><input type="text" id="empresaNome" placeholder="Nome" style="width:100%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1); padding:12px; border-radius:12px; color:white;"><input type="text" id="empresaContato" placeholder="Contato" style="width:100%; margin-top:12px; background:rgba(255,255,255,0.1); padding:12px; border-radius:12px; color:white;"><button class="btn-primary" id="salvarInfoEmpresa" style="margin-top:12px;">Salvar</button></div>
-            <div class="card-table"><h3>Planos</h3><div id="planosList"></div><button class="btn-primary" id="addPlanoBtn">+ Plano</button></div>
-        </div>
-
-        <!-- RELATÓRIOS -->
-        <div id="page-relatorios" class="page-content" style="display:none;">
-            <div class="top-bar"><h1 class="page-title">Relatórios</h1></div>
-            <div class="card-table"><button class="btn-primary" id="relClientesBtn">Clientes</button><button class="btn-primary" id="relCobrancasBtn">Cobranças</button><button class="btn-primary" id="relPagamentosBtn">Pagamentos</button><div id="relOutput" style="margin-top:20px;"></div></div>
-        </div>
-
-        <!-- SUPORTE -->
-        <div id="page-suporte" class="page-content" style="display:none;">
-            <div class="top-bar"><h1 class="page-title">Suporte</h1></div>
-            <div class="card-table"><input type="text" id="suporteContato" placeholder="E-mail/WhatsApp" style="width:100%; background:rgba(255,255,255,0.1); padding:12px; border-radius:12px; color:white;"><button class="btn-primary" id="salvarSuporte" style="margin-top:12px;">Salvar</button><div style="margin-top:20px;"><strong>FAQ:</strong><p>🔹 Como renovar? Clique no ícone calendário.<br>🔹 WhatsApp integrado? Sim, simulado.</p></div></div>
-        </div>
-
-        <!-- BACKUP -->
-        <div id="page-backup" class="page-content" style="display:none;">
-            <div class="top-bar"><h1 class="page-title">Backup</h1></div>
-            <div class="card-table"><button class="btn-primary" id="salvarBackupBtn">💾 Backup</button><button class="btn-primary" id="restaurarBackupBtn">↩️ Restaurar</button><input type="file" id="restoreFile" accept=".json" style="margin-top:12px;"></div>
-        </div>
+    <!-- rodapé minimalista -->
+    <div style="text-align:center; margin-top:16px; font-size:12px; color:#8997ad; letter-spacing:0.3px;">
+        <i class="fas fa-shield-alt" style="margin-right:4px;"></i> Gestor APK · v1.0
     </div>
 </div>
 
 <script>
-    // Dados
-    let clientes = [
-        { id: 1, nome: "Fulano de Tal", valor: 50, vencimento: "2026-04-10", ativo: true },
-        { id: 2, nome: "Ciclano Oliveira", valor: 100, vencimento: "2026-04-05", ativo: true },
-        { id: 3, nome: "Beltrano Silva", valor: 150, vencimento: "2026-03-28", ativo: true },
-        { id: 4, nome: "Maria Souza", valor: 80, vencimento: "2026-04-15", ativo: true }
-    ];
+    (function() {
+        "use strict";
 
-    let historicoCobrancas = [];
-    let planos = [{nome:"Básico", valor:50},{nome:"Premium", valor:100},{nome:"Ultra", valor:150}];
-    
-    // Templates
-    let templates = {
-        vence_hoje: {
-            nome: "⚠️ Vence Hoje",
-            icon: "fa-calendar-day",
-            cor: "danger",
-            template: "🔥 *URGENTE* {nome}!\n\nSeu plano IPTV vence HOJE ({data_vencimento}).\n\n✅ *Valor:* R$ {valor}\n💳 Faça o pagamento para não ficar sem seu conteúdo favorito!\n📞 Dúvidas: {suporte}\n\n🔗 Link: {link_pagamento}"
-        },
-        vence_proximo: {
-            nome: "⏰ Vence em breve",
-            icon: "fa-hourglass-half",
-            cor: "warning",
-            template: "📺 *{nome}*, tudo bem?\n\nSeu plano IPTV vence em *{dias} dias* ({data_vencimento}).\n\n💰 *Valor:* R$ {valor}\n⏰ Não deixe para última hora!\n🔗 {link_pagamento}\n\nQualquer dúvida, estamos à disposição! 🚀"
-        },
-        renovacao: {
-            nome: "🎉 Renovação Confirmada",
-            icon: "fa-gift",
-            cor: "success",
-            template: "🎉 *PARABÉNS {nome}!* 🎉\n\nSeu plano IPTV foi *RENOVADO COM SUCESSO*!\n📅 Nova data: {data_vencimento}\n📺 Aproveite todos os canais!\n\nObrigado por confiar em {empresa}! 🚀"
-        }
-    };
+        // ----- ESTADO INICIAL -----
+        let clients = [
+            { id: 1, name: "Mariana Costa", email: "mariana.c@empresa.com", type: "vip" },
+            { id: 2, name: "João Pereira", email: "joao.p@negocio.com", type: "regular" },
+            { id: 3, name: "Fernanda Lima", email: "fer.lima@startup.com", type: "vip" },
+            { id: 4, name: "Carlos Eduardo", email: "carlos.edu@webmail.com", type: "regular" },
+        ];
+        let nextId = 5; // próximo ID disponível
+        let currentFilter = 'all';
+        let editingId = null; // null = criação
 
-    let infoEmpresa = { nome: "IPTV Manager Pro", contato: "(11) 99999-9999" };
-    let suporteContato = "suporte@iptvmanager.com";
-    let linkPagamento = "https://pagamento.iptvmanager.com/pay";
-    
-    let statusChart, vencimentoChart;
+        // DOM references
+        const clientListEl = document.getElementById('clientListContainer');
+        const searchInput = document.getElementById('searchInput');
+        const clientCounter = document.getElementById('clientCounter');
+        const formPanel = document.getElementById('formPanel');
+        const formTitle = document.getElementById('formTitle');
+        const clientNameInput = document.getElementById('clientNameInput');
+        const clientEmailInput = document.getElementById('clientEmailInput');
+        const clientTypeInput = document.getElementById('clientTypeInput');
+        const editClientId = document.getElementById('editClientId');
+        const addClientBtn = document.getElementById('addClientBtn');
+        const cancelFormBtn = document.getElementById('cancelFormBtn');
+        const saveClientBtn = document.getElementById('saveClientBtn');
 
-    function salvarDados() { localStorage.setItem("iptvData", JSON.stringify({ clientes, historicoCobrancas, planos, templates, infoEmpresa, suporteContato, linkPagamento })); }
-    
-    function carregarDados() { 
-        let data = localStorage.getItem("iptvData"); 
-        if(data) { 
-            let d = JSON.parse(data); 
-            clientes = d.clientes; 
-            historicoCobrancas = d.historicoCobrancas || []; 
-            planos = d.planos; 
-            templates = d.templates; 
-            infoEmpresa = d.infoEmpresa; 
-            suporteContato = d.suporteContato;
-            linkPagamento = d.linkPagamento || "https://pagamento.iptvmanager.com/pay";
-        } 
-    }
+        // filter buttons
+        const filterBtns = document.querySelectorAll('.filter-group button');
 
-    function processarTemplate(templateStr, cliente) {
-        let dias = Math.ceil((new Date(cliente.vencimento) - new Date()) / 86400000);
-        let dataAtual = new Date().toLocaleDateString('pt-BR');
-        
-        return templateStr
-            .replace(/{nome}/g, cliente.nome)
-            .replace(/{data_vencimento}/g, new Date(cliente.vencimento).toLocaleDateString('pt-BR'))
-            .replace(/{dias}/g, dias)
-            .replace(/{valor}/g, `R$ ${cliente.valor.toFixed(2)}`)
-            .replace(/{empresa}/g, infoEmpresa.nome)
-            .replace(/{suporte}/g, suporteContato)
-            .replace(/{data_atual}/g, dataAtual)
-            .replace(/{link_pagamento}/g, linkPagamento);
-    }
+        // ----- FUNÇÕES AUXILIARES -----
+        function getFilteredClients() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            let filtered = clients;
 
-    function renderizarTemplates() {
-        const container = document.getElementById('templatesGrid');
-        if(!container) return;
-        
-        let html = '';
-        for(const [key, tmpl] of Object.entries(templates)) {
-            const clienteTeste = clientes[0];
-            const preview = processarTemplate(tmpl.template, clienteTeste);
-            
-            html += `
-                <div class="template-card">
-                    <div class="template-header">
-                        <h3><i class="fas ${tmpl.icon}"></i> ${tmpl.nome} <span class="template-badge" style="background: var(--${tmpl.cor})">${tmpl.cor.toUpperCase()}</span></h3>
-                    </div>
-                    <div class="template-body">
-                        <textarea class="template-editor" id="template_${key}" rows="6" data-key="${key}">${escapeHtml(tmpl.template)}</textarea>
-                        <div class="placeholders-bar">
-                            <div class="placeholder-chip" onclick="insertPlaceholder('template_${key}', '{nome}')">{nome}</div>
-                            <div class="placeholder-chip" onclick="insertPlaceholder('template_${key}', '{data_vencimento}')">{data_vencimento}</div>
-                            <div class="placeholder-chip" onclick="insertPlaceholder('template_${key}', '{dias}')">{dias}</div>
-                            <div class="placeholder-chip" onclick="insertPlaceholder('template_${key}', '{valor}')">{valor}</div>
-                            <div class="placeholder-chip" onclick="insertPlaceholder('template_${key}', '{link_pagamento}')">{link_pagamento}</div>
-                        </div>
-                        <div class="preview-box">
-                            <div class="preview-label"><i class="fas fa-eye"></i> PRÉ-VISUALIZAÇÃO</div>
-                            <div class="preview-content" id="preview_${key}">${escapeHtml(preview)}</div>
-                        </div>
-                        <select class="test-select" id="select_${key}" onchange="updatePreview('${key}')">
-                            <option value="">🔍 Testar com outro cliente</option>
-                            ${clientes.map(c => `<option value="${c.id}">📺 ${c.nome} - Vence ${c.vencimento}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-            `;
-        }
-        container.innerHTML = html;
-        
-        for(const key of Object.keys(templates)) {
-            const textarea = document.getElementById(`template_${key}`);
-            if(textarea) {
-                textarea.addEventListener('input', function() { updatePreview(key); });
+            // filtro por tipo
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(c => c.type === currentFilter);
             }
-        }
-    }
 
-    function escapeHtml(str) {
-        return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-    }
-
-    window.insertPlaceholder = (textareaId, placeholder) => {
-        const textarea = document.getElementById(textareaId);
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        textarea.value = text.substring(0, start) + placeholder + text.substring(end);
-        textarea.focus();
-        textarea.selectionStart = textarea.selectionEnd = start + placeholder.length;
-        const key = textareaId.replace('template_', '');
-        updatePreview(key);
-    };
-
-    window.copyPlaceholder = (placeholder) => {
-        navigator.clipboard.writeText(placeholder);
-        alert(`✅ Placeholder "${placeholder}" copiado!`);
-    };
-
-    window.updatePreview = (key) => {
-        const textarea = document.getElementById(`template_${key}`);
-        const select = document.getElementById(`select_${key}`);
-        if(!textarea) return;
-        
-        let clienteTeste = clientes[0];
-        if(select && select.value) {
-            clienteTeste = clientes.find(c => c.id == select.value) || clientes[0];
-        }
-        
-        const preview = processarTemplate(textarea.value, clienteTeste);
-        const previewDiv = document.getElementById(`preview_${key}`);
-        if(previewDiv) previewDiv.innerHTML = escapeHtml(preview);
-    };
-
-    function salvarTodosTemplates() {
-        for(const key of Object.keys(templates)) {
-            const textarea = document.getElementById(`template_${key}`);
-            if(textarea && templates[key]) {
-                templates[key].template = textarea.value;
+            // busca por nome ou email
+            if (searchTerm !== '') {
+                filtered = filtered.filter(c =>
+                    c.name.toLowerCase().includes(searchTerm) ||
+                    c.email.toLowerCase().includes(searchTerm)
+                );
             }
+            return filtered;
         }
-        salvarDados();
-        alert('✅ Todos os templates foram salvos com sucesso!');
-    }
 
-    function atualizarTudo() { 
-        atualizarStats(); 
-        renderizarClientes(); 
-        renderizarHistorico(); 
-        renderizarPlanos();
-        atualizarGraficos();
-        if(document.getElementById('page-templates').style.display !== 'none') {
-            renderizarTemplates();
+        function render() {
+            const filtered = getFilteredClients();
+            const count = filtered.length;
+
+            // atualiza contador
+            clientCounter.textContent = count + (count === 1 ? ' cliente' : ' clientes');
+
+            if (count === 0) {
+                clientListEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-slash"></i>
+                        <p style="font-weight:500; margin-top:4px;">Nenhum cliente encontrado</p>
+                        <p style="font-size:13px; color:#8f9db3;">Adicione um novo cliente</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(client => {
+                const isVip = client.type === 'vip';
+                const tagText = isVip ? 'VIP' : 'Regular';
+                const tagClass = isVip ? 'vip' : 'regular';
+                html += `
+                    <div class="client-item" data-id="${client.id}">
+                        <div class="client-info">
+                            <div class="client-name">${escapeHtml(client.name)}</div>
+                            <div class="client-email"><i class="fas fa-envelope"></i> ${escapeHtml(client.email)}</div>
+                            <span class="client-tag" style="${isVip ? 'background:#d4e0fd; color:#0f3f8a;' : 'background:#eef2f7; color:#3d4f6b;'}">${tagText}</span>
+                        </div>
+                        <div class="client-actions">
+                            <button class="edit-btn" data-id="${client.id}" aria-label="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="delete-btn" data-id="${client.id}" aria-label="Deletar"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            clientListEl.innerHTML = html;
+
+            // eventos nos botões (delegação já está no container, mas usamos delegação)
         }
-    }
-    
-    function atualizarStats() {
-        let ativos = clientes.filter(c=>c.ativo).length;
-        let hoje = new Date().toISOString().slice(0,10);
-        let venceProx = clientes.filter(c=>{ let dif = (new Date(c.vencimento)-new Date(hoje))/(1000*3600*24); return dif>0 && dif<=5 }).length;
-        let vencidos = clientes.filter(c=>new Date(c.vencimento)<new Date(hoje)).length;
-        document.getElementById("statsCards").innerHTML = `
-            <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><h3>ATIVOS</h3><div class="stat-number">${ativos}</div></div>
-            <div class="stat-card"><div class="stat-icon"><i class="fas fa-hourglass-half"></i></div><h3>VENCE EM 5 DIAS</h3><div class="stat-number">${venceProx}</div></div>
-            <div class="stat-card"><div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div><h3>VENCIDOS</h3><div class="stat-number">${vencidos}</div></div>
-            <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><h3>TOTAL CLIENTES</h3><div class="stat-number">${clientes.length}</div></div>
-        `;
-        let ultimos = [...clientes].reverse().slice(0,5);
-        document.getElementById("ultimosClientes").innerHTML = `<div style="margin-top:16px;">${ultimos.map(c=>`<div style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.1);"><i class="fas fa-user"></i> ${c.nome} - R$ ${c.valor} - Vence ${c.vencimento}</div>`).join('')}</div>`;
-    }
-    
-    function atualizarGraficos() {
-        let ativos = clientes.filter(c=>c.ativo).length;
-        let vencidos = clientes.filter(c=>new Date(c.vencimento)<new Date()).length;
-        let statusCtx = document.getElementById('statusChart').getContext('2d');
-        if(statusChart) statusChart.destroy();
-        statusChart = new Chart(statusCtx, { type: 'doughnut', data: { labels: ['Ativos', 'Vencidos'], datasets: [{ data: [ativos, vencidos], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } } } });
-        
-        let dias = [0,5,10,15,20,25,30];
-        let quant = dias.map(d => clientes.filter(c=>{ let dif = (new Date(c.vencimento)-new Date())/86400000; return dif>0 && dif<=d; }).length);
-        let vencCtx = document.getElementById('vencimentoChart').getContext('2d');
-        if(vencimentoChart) vencimentoChart.destroy();
-        vencimentoChart = new Chart(vencCtx, { type: 'line', data: { labels: ['5d','10d','15d','20d','25d','30d'], datasets: [{ label: 'Clientes a vencer', data: quant.slice(1), borderColor: '#818cf8', backgroundColor: 'rgba(99,102,241,0.1)', tension: 0.4, fill: true }] }, options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } }, scales: { y: { ticks: { color: 'white' } }, x: { ticks: { color: 'white' } } } } });
-    }
-    
-    function renderizarClientes() {
-        let html = `<table><thead><th>Nome</th><th>Valor</th><th>Vencimento</th><th>Ações</th></thead><tbody>`;
-        clientes.forEach(c => {
-            let proxMes = new Date(new Date(c.vencimento).setMonth(new Date(c.vencimento).getMonth()+1)).toISOString().slice(0,10);
-            html += `<tr><td>${c.nome}</td><td>R$ ${c.valor}</td><td>${c.vencimento}</td><td class="action-icons">
-                <i class="fas fa-edit" onclick="editarCliente(${c.id})"></i>
-                <i class="fas fa-calendar-plus" onclick="renovarCliente(${c.id},'${proxMes}')"></i>
-                <i class="fas fa-receipt" onclick="enviarCobranca(${c.id})"></i>
-                <i class="fab fa-whatsapp" onclick="simularWhats(${c.id})"></i>
-             </td></tr>`;
+
+        // escape para evitar XSS (simples)
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // atualiza o formulário para edição ou criação
+        function openForm(client = null) {
+            if (client) {
+                // edição
+                editingId = client.id;
+                formTitle.textContent = 'Editar cliente';
+                clientNameInput.value = client.name;
+                clientEmailInput.value = client.email;
+                clientTypeInput.value = client.type;
+                editClientId.value = client.id;
+            } else {
+                // novo
+                editingId = null;
+                formTitle.textContent = 'Novo cliente';
+                clientNameInput.value = '';
+                clientEmailInput.value = '';
+                clientTypeInput.value = 'regular';
+                editClientId.value = '';
+            }
+            formPanel.classList.add('open');
+            clientNameInput.focus();
+        }
+
+        function closeForm() {
+            formPanel.classList.remove('open');
+            editingId = null;
+            editClientId.value = '';
+            // limpa validação visual
+        }
+
+        // salvar cliente (cria ou atualiza)
+        function saveClient() {
+            const name = clientNameInput.value.trim();
+            const email = clientEmailInput.value.trim();
+            const type = clientTypeInput.value;
+
+            if (name === '' || email === '') {
+                alert('Preencha nome e e-mail.');
+                return;
+            }
+
+            // validação simples de email
+            if (!email.includes('@') || !email.includes('.')) {
+                alert('E-mail inválido. Insira um endereço válido.');
+                return;
+            }
+
+            const editing = editingId !== null;
+
+            if (editing) {
+                // atualiza
+                const index = clients.findIndex(c => c.id === editingId);
+                if (index !== -1) {
+                    clients[index] = {
+                        ...clients[index],
+                        name: name,
+                        email: email,
+                        type: type,
+                    };
+                } else {
+                    alert('Cliente não encontrado.');
+                    return;
+                }
+            } else {
+                // cria novo
+                const newClient = {
+                    id: nextId++,
+                    name: name,
+                    email: email,
+                    type: type,
+                };
+                clients.push(newClient);
+            }
+
+            closeForm();
+            render();
+            // força atualização da busca (se houver)
+        }
+
+        // deletar cliente
+        function deleteClient(id) {
+            if (!confirm('Remover este cliente?')) return;
+            clients = clients.filter(c => c.id !== id);
+            render();
+        }
+
+        // ----- EVENTOS (delegação) -----
+        clientListEl.addEventListener('click', function(e) {
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            // editar
+            if (target.classList.contains('edit-btn')) {
+                const id = Number(target.dataset.id);
+                const client = clients.find(c => c.id === id);
+                if (client) {
+                    openForm(client);
+                }
+                return;
+            }
+
+            // deletar
+            if (target.classList.contains('delete-btn')) {
+                const id = Number(target.dataset.id);
+                deleteClient(id);
+                return;
+            }
         });
-        html += `</tbody></table>`;
-        document.getElementById("listaClientesTable").innerHTML = html;
-    }
-    
-    window.editarCliente = (id)=>{ let c = clientes.find(x=>x.id==id); let n=prompt("Nome",c.nome); if(n) c.nome=n; let v=prompt("Valor",c.valor); if(v) c.valor=parseFloat(v); atualizarTudo(); salvarDados(); };
-    window.renovarCliente = (id, data)=>{ let c = clientes.find(x=>x.id==id); c.vencimento = data; adicionarHistorico(`Renovado: ${c.nome} para ${data}`); alert(`✅ Renovado até ${data}`); atualizarTudo(); salvarDados(); };
-    
-    window.enviarCobranca = (id) => {
-        let c = clientes.find(x=>x.id==id);
-        let dias = Math.ceil((new Date(c.vencimento) - new Date()) / 86400000);
-        let templateKey = dias <= 0 ? 'vence_hoje' : (dias <= 5 ? 'vence_proximo' : 'vence_proximo');
-        const template = templates[templateKey]?.template || templates.vence_proximo.template;
-        const mensagem = processarTemplate(template, c);
-        adicionarHistorico(`📨 Cobrança enviada para ${c.nome} (${templates[templateKey]?.nome || 'Template padrão'})`);
-        alert(`📱 MENSAGEM ENVIADA:\n\n${mensagem}`);
-    };
-    
-    window.simularWhats = (id)=>{ let c = clientes.find(x=>x.id==id); alert(`📱 WhatsApp para ${c.nome}: Abrindo chat...`); };
-    
-    function adicionarHistorico(texto) { 
-        historicoCobrancas.unshift({ data: new Date().toLocaleString('pt-BR'), texto }); 
-        if(historicoCobrancas.length > 30) historicoCobrancas.pop();
-        renderizarHistorico(); 
-        salvarDados(); 
-    }
-    
-    function renderizarHistorico() { 
-        const container = document.getElementById("historicoCobrancas");
-        if(container) {
-            container.innerHTML = `<ul style="list-style:none;">${historicoCobrancas.map(h=>`<li style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1);">📌 [${h.data}] ${h.texto}</li>`).join('')}</ul>`;
-        }
-    }
-    
-    function renderizarPlanos() { 
-        const container = document.getElementById("planosList");
-        if(container) {
-            container.innerHTML = planos.map((p,i)=>`<div style="display:flex; justify-content:space-between; padding:12px; background:rgba(255,255,255,0.03); margin:8px 0; border-radius:12px;"><span>${p.nome} - R$ ${p.valor}</span><span><button class="btn-outline" onclick="editarPlano(${i})">Editar</button> <button class="btn-outline" onclick="excluirPlano(${i})">Excluir</button></span></div>`).join('');
-        }
-    }
-    
-    window.editarPlano = (i)=>{ let n=prompt("Nome",planos[i].nome); if(n) planos[i].nome=n; let v=prompt("Valor",planos[i].valor); if(v) planos[i].valor=parseFloat(v); renderizarPlanos(); salvarDados(); };
-    window.excluirPlano = (i)=>{ planos.splice(i,1); renderizarPlanos(); salvarDados(); };
-    
-    // Event Listeners
-    document.getElementById("btnAddCliente")?.addEventListener("click",()=>{ 
-        let nome = prompt("Nome completo"); 
-        let valor = parseFloat(prompt("Valor mensal"))||50; 
-        let venc = prompt("Data venc (AAAA-MM-DD)", new Date().toISOString().slice(0,10)); 
-        clientes.push({ id: Date.now(), nome, valor, vencimento: venc, ativo: true }); 
-        atualizarTudo(); 
-        salvarDados(); 
-    });
-    
-    document.getElementById("gerarCobrancaBtn")?.addEventListener("click",()=>{ 
-        let id = prompt("ID do cliente (veja na lista)"); 
-        if(id) enviarCobranca(parseInt(id)); 
-    });
-    
-    document.getElementById("saveAllTemplates")?.addEventListener("click", salvarTodosTemplates);
-    document.getElementById("salvarInfoEmpresa")?.addEventListener("click",()=>{ 
-        infoEmpresa.nome = document.getElementById("empresaNome").value; 
-        infoEmpresa.contato = document.getElementById("empresaContato").value; 
-        alert("✅ Informações salvas"); 
-        salvarDados(); 
-    });
-    
-    document.getElementById("salvarSuporte")?.addEventListener("click",()=>{ 
-        suporteContato = document.getElementById("suporteContato").value; 
-        alert("✅ Suporte salvo"); 
-        salvarDados(); 
-    });
-    
-    document.getElementById("addPlanoBtn")?.addEventListener("click",()=>{ 
-        let n=prompt("Nome do plano"); 
-        let v=parseFloat(prompt("Valor")); 
-        planos.push({nome:n, valor:v}); 
-        renderizarPlanos(); 
-        salvarDados(); 
-    });
-    
-    document.getElementById("relClientesBtn")?.addEventListener("click",()=>{ 
-        document.getElementById("relOutput").innerHTML = `<pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:16px; overflow-x:auto;">${JSON.stringify(clientes,null,2)}</pre>`; 
-    });
-    
-    document.getElementById("relCobrancasBtn")?.addEventListener("click",()=>{ 
-        document.getElementById("relOutput").innerHTML = `<pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:16px;">${JSON.stringify(historicoCobrancas,null,2)}</pre>`; 
-    });
-    
-    document.getElementById("relPagamentosBtn")?.addEventListener("click",()=>{ 
-        document.getElementById("relOutput").innerHTML = `<pre style="background:rgba(0,0,0,0.3); padding:16px;">💰 Total mensal: R$ ${clientes.reduce((a,b)=>a+b.valor,0)}</pre>`; 
-    });
-    
-    document.getElementById("salvarBackupBtn")?.addEventListener("click",()=>{ 
-        let data = JSON.stringify({ clientes, historicoCobrancas, planos, templates, infoEmpresa, suporteContato, linkPagamento }); 
-        let blob = new Blob([data],{type:"application/json"}); 
-        let a = document.createElement("a"); 
-        a.href = URL.createObjectURL(blob); 
-        a.download = `backup_iptv_${new Date().toISOString().slice(0,19)}.json`; 
-        a.click(); 
-        alert("✅ Backup criado"); 
-    });
-    
-    document.getElementById("restaurarBackupBtn")?.addEventListener("click",()=>{ document.getElementById("restoreFile").click(); });
-    document.getElementById("restoreFile")?.addEventListener("change",(e)=>{ 
-        let file = e.target.files[0]; 
-        let reader = new FileReader(); 
-        reader.onload = (ev)=>{ 
-            let d = JSON.parse(ev.target.result); 
-            clientes = d.clientes; 
-            historicoCobrancas = d.historicoCobrancas; 
-            planos = d.planos; 
-            templates = d.templates; 
-            infoEmpresa = d.infoEmpresa; 
-            suporteContato = d.suporteContato;
-            linkPagamento = d.linkPagamento;
-            salvarDados(); 
-            atualizarTudo(); 
-            alert("✅ Restaurado com sucesso!"); 
-        }; 
-        reader.readAsText(file); 
-    });
-    
-    // Navegação
-    document.querySelectorAll(".nav-item").forEach(item=>{ 
-        item.addEventListener("click",()=>{ 
-            let page = item.getAttribute("data-page"); 
-            document.querySelectorAll(".page-content").forEach(p=>p.style.display="none"); 
-            document.getElementById(`page-${page}`).style.display="block"; 
-            document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active")); 
-            item.classList.add("active");
-            if(page === "templates") renderizarTemplates();
-            if(page === "dashboard") atualizarGraficos();
-        }); 
-    });
-    
-    // Inicialização
-    carregarDados();
-    document.getElementById("empresaNome").value = infoEmpresa.nome;
-    document.getElementById("empresaContato").value = infoEmpresa.contato;
-    document.getElementById("suporteContato").value = suporteContato;
-    atualizarTudo();
+
+        // botão adicionar
+        addClientBtn.addEventListener('click', function() {
+            openForm(null); // novo
+        });
+
+        // cancelar formulário
+        cancelFormBtn.addEventListener('click', closeForm);
+
+        // salvar
+        saveClientBtn.addEventListener('click', saveClient);
+
+        // busca com debounce simples
+        let searchTimeout = null;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => render(), 180);
+        });
+
+        // filtros
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                render();
+            });
+        });
+
+        // clique fora do form (opcional) - não implementado para não atrapalhar
+
+        // render inicial
+        render();
+
+        // Fechar form com ESC (extra)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && formPanel.classList.contains('open')) {
+                closeForm();
+            }
+        });
+
+        // pequeno truque: se clicar no fundo (fora do form) não fecha, mas mantemos assim.
+
+        // Para simular APK, garantir que o foco não role a tela em dispositivos
+        // e previnir comportamento padrão de submit
+        document.querySelectorAll('form, input, select').forEach(el => {
+            if (el.tagName === 'FORM') {
+                el.addEventListener('submit', e => e.preventDefault());
+            }
+        });
+
+        // ao pressionar Enter nos campos, salvar
+        clientNameInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clientEmailInput.focus();
+            }
+        });
+        clientEmailInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveClient();
+            }
+        });
+
+        // pré-carregar dados
+        console.log('Gestor de Clientes APK carregado!');
+    })();
 </script>
 </body>
 </html>
