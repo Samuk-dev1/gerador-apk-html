@@ -1,767 +1,347 @@
+<?php
+require_once 'parser.php';
+
+$channels = [];
+$error = '';
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $m3uContent = '';
+    
+    if (!empty($_POST['m3u_url'])) {
+        $url = filter_var($_POST['m3u_url'], FILTER_VALIDATE_URL);
+        if ($url) {
+            $parsedUrl = parse_url($url);
+            $scheme = strtolower($parsedUrl['scheme'] ?? '');
+            $host = strtolower($parsedUrl['host'] ?? '');
+            
+            if (!in_array($scheme, ['http', 'https'])) {
+                $error = 'Apenas URLs HTTP/HTTPS são permitidas.';
+            } elseif (preg_match('/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|0\.0\.0\.0|::1|\[::1\])/i', $host)) {
+                $error = 'URLs locais ou privadas não são permitidas.';
+            } else {
+                $context = stream_context_create([
+                    'http' => [
+                        'timeout' => 30,
+                        'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    ]
+                ]);
+                $m3uContent = @file_get_contents($url, false, $context);
+                if ($m3uContent === false) {
+                    $error = 'Não foi possível acessar a URL fornecida.';
+                }
+            }
+        } else {
+            $error = 'URL inválida.';
+        }
+    } elseif (!empty($_POST['m3u_content'])) {
+        $m3uContent = $_POST['m3u_content'];
+    } elseif (isset($_FILES['m3u_file']) && $_FILES['m3u_file']['error'] === UPLOAD_ERR_OK) {
+        $m3uContent = file_get_contents($_FILES['m3u_file']['tmp_name']);
+    }
+    
+    if (!empty($m3uContent) && empty($error)) {
+        $parser = new M3UParser();
+        $channels = $parser->parse($m3uContent);
+        if (count($channels) > 0) {
+            $success = 'Encontrados ' . count($channels) . ' canais na lista.';
+        } else {
+            $error = 'Nenhum canal encontrado na lista M3U.';
+        }
+    } elseif (empty($error)) {
+        $error = 'Por favor, forneça uma lista M3U (URL, arquivo ou texto).';
+    }
+}
+?>
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestor de Clientes · APK</title>
-    <!-- Ícone e estilo nativo -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        body {
-            background: #eef2f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 12px;
-        }
-
-        /* Container estilo APK */
-        .phone-frame {
-            max-width: 420px;
-            width: 100%;
-            background: #ffffff;
-            border-radius: 36px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 8px #d0d7de;
-            overflow: hidden;
-            padding: 18px 16px 24px;
-            position: relative;
-            transition: all 0.2s;
-        }
-
-        /* status bar fictícia */
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 600;
-            color: #1c1e24;
-            padding: 0 4px 12px 4px;
-            letter-spacing: 0.3px;
-            border-bottom: 1px solid #e9edf2;
-        }
-
-        .status-bar i {
-            margin-right: 4px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 0 10px;
-        }
-
-        .header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #0b1a33;
-            letter-spacing: -0.5px;
-        }
-
-        .header h1 i {
-            color: #2a7de1;
-            margin-right: 6px;
-        }
-
-        .header-actions button {
-            background: #f0f4fe;
-            border: none;
-            border-radius: 30px;
-            padding: 10px 16px;
-            font-weight: 600;
-            font-size: 14px;
-            color: #1a5fc7;
-            cursor: pointer;
-            transition: 0.15s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .header-actions button i {
-            font-size: 16px;
-        }
-
-        .header-actions button:active {
-            background: #d9e5fd;
-            transform: scale(0.96);
-        }
-
-        /* barra de busca */
-        .search-box {
-            background: #f2f5fa;
-            border-radius: 30px;
-            padding: 8px 18px;
-            margin: 10px 0 18px;
-            display: flex;
-            align-items: center;
-            border: 1px solid #e0e6ef;
-        }
-
-        .search-box i {
-            color: #7e8b9f;
-            font-size: 16px;
-            margin-right: 12px;
-        }
-
-        .search-box input {
-            border: none;
-            background: transparent;
-            width: 100%;
-            font-size: 15px;
-            padding: 8px 0;
-            outline: none;
-            color: #1e293b;
-        }
-
-        .search-box input::placeholder {
-            color: #9aa6b9;
-            font-weight: 400;
-        }
-
-        /* contador + filtro */
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 6px 0 18px;
-        }
-
-        .client-count {
-            background: #eef2f7;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #1f2a44;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        .filter-group button {
-            background: transparent;
-            border: 1px solid #d7dfe9;
-            border-radius: 30px;
-            padding: 5px 14px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #2c3e5c;
-            transition: 0.1s;
-            cursor: pointer;
-        }
-
-        .filter-group button.active {
-            background: #1a5fc7;
-            border-color: #1a5fc7;
-            color: white;
-        }
-
-        .filter-group button:active {
-            opacity: 0.7;
-        }
-
-        /* lista de clientes */
-        .client-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin: 4px 0 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .client-list::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .client-list::-webkit-scrollbar-track {
-            background: #eef2f7;
-            border-radius: 10px;
-        }
-
-        .client-list::-webkit-scrollbar-thumb {
-            background: #bcc9db;
-            border-radius: 10px;
-        }
-
-        .client-item {
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 14px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 1px solid #eef2f7;
-            transition: 0.12s;
-            animation: fadeIn 0.2s ease;
-        }
-
-        .client-item:active {
-            background: #f8faff;
-            border-color: #cbd8ec;
-        }
-
-        .client-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-        }
-
-        .client-name {
-            font-weight: 700;
-            font-size: 16px;
-            color: #0b1a33;
-        }
-
-        .client-email {
-            font-size: 13px;
-            color: #4e607a;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .client-email i {
-            font-size: 12px;
-            color: #7a8aa3;
-            width: 14px;
-        }
-
-        .client-tag {
-            font-size: 11px;
-            background: #e9eefa;
-            padding: 3px 10px;
-            border-radius: 30px;
-            color: #1a5fc7;
-            font-weight: 600;
-            letter-spacing: 0.2px;
-            display: inline-block;
-            margin-top: 3px;
-        }
-
-        .client-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .client-actions button {
-            background: transparent;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: #3d4f6b;
-            transition: 0.1s;
-            cursor: pointer;
-        }
-
-        .client-actions .edit-btn:active {
-            background: #e3ebf9;
-            color: #0f3f8a;
-        }
-
-        .client-actions .delete-btn:active {
-            background: #ffe8e8;
-            color: #c72a2a;
-        }
-
-        /* formulário de add/editar */
-        .form-panel {
-            background: #f8faff;
-            border-radius: 24px;
-            padding: 18px 16px 20px;
-            margin: 12px 0 8px;
-            border: 1px solid #e3eaf3;
-            box-shadow: 0 6px 14px rgba(0, 20, 40, 0.04);
-            display: none;
-        }
-
-        .form-panel.open {
-            display: block;
-            animation: slideDown 0.25s ease;
-        }
-
-        .form-title {
-            font-weight: 700;
-            font-size: 17px;
-            color: #0b1a33;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .form-title i {
-            color: #1a5fc7;
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .form-group label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1f2a44;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #d7dfe9;
-            border-radius: 20px;
-            font-size: 15px;
-            background: white;
-            transition: 0.15s;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #1a5fc7;
-            box-shadow: 0 0 0 3px rgba(26, 95, 199, 0.15);
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .form-actions button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 700;
-            font-size: 15px;
-            transition: 0.1s;
-            cursor: pointer;
-        }
-
-        .btn-save {
-            background: #1a5fc7;
-            color: white;
-        }
-
-        .btn-save:active {
-            background: #114a9c;
-            transform: scale(0.97);
-        }
-
-        .btn-cancel {
-            background: #e9eef6;
-            color: #1f2a44;
-        }
-
-        .btn-cancel:active {
-            background: #d5dde9;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 10px;
-            color: #6f7f97;
-        }
-
-        .empty-state i {
-            font-size: 42px;
-            color: #cbd6e6;
-            margin-bottom: 12px;
-        }
-
-        /* animações */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* responsivo */
-        @media (max-width: 480px) {
-            .phone-frame {
-                border-radius: 28px;
-                padding: 14px 12px 18px;
-            }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator de Listas M3U</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
-<div class="phone-frame">
-    <!-- status -->
-    <div class="status-bar">
-        <span><i class="fas fa-signal"></i> 5G <i class="fas fa-wifi"></i></span>
-        <span><i class="fas fa-clock"></i> 14:28</span>
-        <span><i class="fas fa-battery-three-quarters"></i> 86%</span>
-    </div>
+    <div class="container">
+        <header>
+            <h1>Extrator de Listas M3U</h1>
+            <p>Extraia e organize canais de listas M3U/M3U8</p>
+        </header>
 
-    <!-- cabeçalho -->
-    <div class="header">
-        <h1><i class="fas fa-users"></i>Clientes</h1>
-        <div class="header-actions">
-            <button id="addClientBtn"><i class="fas fa-plus-circle"></i> Novo</button>
-        </div>
-    </div>
+        <main>
+            <form method="POST" enctype="multipart/form-data" class="upload-form">
+                <div class="input-group">
+                    <label for="m3u_url">URL da Lista M3U:</label>
+                    <input type="url" id="m3u_url" name="m3u_url" placeholder="https://exemplo.com/lista.m3u">
+                </div>
 
-    <!-- busca -->
-    <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="Pesquisar cliente...">
-    </div>
+                <div class="divider">
+                    <span>OU</span>
+                </div>
 
-    <!-- toolbar -->
-    <div class="toolbar">
-        <span class="client-count" id="clientCounter">0 clientes</span>
-        <div class="filter-group">
-            <button class="active" data-filter="all">Todos</button>
-            <button data-filter="vip">VIP</button>
-            <button data-filter="regular">Regular</button>
-        </div>
-    </div>
+                <div class="input-group">
+                    <label for="m3u_file">Upload de Arquivo M3U:</label>
+                    <input type="file" id="m3u_file" name="m3u_file" accept=".m3u,.m3u8">
+                </div>
 
-    <!-- lista -->
-    <div class="client-list" id="clientListContainer">
-        <!-- renderizado via js -->
-    </div>
+                <div class="divider">
+                    <span>OU</span>
+                </div>
 
-    <!-- painel formulário -->
-    <div class="form-panel" id="formPanel">
-        <div class="form-title"><i class="fas fa-pen-fancy"></i> <span id="formTitle">Novo cliente</span></div>
-        <div class="form-group">
-            <label>Nome completo</label>
-            <input type="text" id="clientNameInput" placeholder="Ex: Ana Silva" maxlength="40">
-        </div>
-        <div class="form-group">
-            <label>E-mail</label>
-            <input type="email" id="clientEmailInput" placeholder="ana@email.com">
-        </div>
-        <div class="form-group" style="margin-bottom:6px;">
-            <label>Tipo</label>
-            <select id="clientTypeInput" style="width:100%; padding:12px 14px; border-radius:20px; border:1px solid #d7dfe9; background:white; font-size:15px; outline:none;">
-                <option value="regular">Regular</option>
-                <option value="vip">VIP</option>
-            </select>
-        </div>
-        <div class="form-actions">
-            <button class="btn-cancel" id="cancelFormBtn">Cancelar</button>
-            <button class="btn-save" id="saveClientBtn"><i class="fas fa-check"></i> Salvar</button>
-        </div>
-        <input type="hidden" id="editClientId" value="">
-    </div>
+                <div class="input-group">
+                    <label for="m3u_content">Cole o Conteúdo M3U:</label>
+                    <textarea id="m3u_content" name="m3u_content" rows="6" placeholder="#EXTM3U
+#EXTINF:-1 tvg-logo=&quot;logo.png&quot; group-title=&quot;Grupo&quot;,Nome do Canal
+http://exemplo.com/stream"></textarea>
+                </div>
 
-    <!-- rodapé minimalista -->
-    <div style="text-align:center; margin-top:16px; font-size:12px; color:#8997ad; letter-spacing:0.3px;">
-        <i class="fas fa-shield-alt" style="margin-right:4px;"></i> Gestor APK · v1.0
-    </div>
-</div>
+                <button type="submit" class="btn-primary">Extrair Canais</button>
+            </form>
 
-<script>
-    (function() {
-        "use strict";
+            <?php if ($error): ?>
+                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
 
-        // ----- ESTADO INICIAL -----
-        let clients = [
-            { id: 1, name: "Mariana Costa", email: "mariana.c@empresa.com", type: "vip" },
-            { id: 2, name: "João Pereira", email: "joao.p@negocio.com", type: "regular" },
-            { id: 3, name: "Fernanda Lima", email: "fer.lima@startup.com", type: "vip" },
-            { id: 4, name: "Carlos Eduardo", email: "carlos.edu@webmail.com", type: "regular" },
-        ];
-        let nextId = 5; // próximo ID disponível
-        let currentFilter = 'all';
-        let editingId = null; // null = criação
+            <?php if ($success): ?>
+                <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+            <?php endif; ?>
 
-        // DOM references
-        const clientListEl = document.getElementById('clientListContainer');
-        const searchInput = document.getElementById('searchInput');
-        const clientCounter = document.getElementById('clientCounter');
-        const formPanel = document.getElementById('formPanel');
-        const formTitle = document.getElementById('formTitle');
-        const clientNameInput = document.getElementById('clientNameInput');
-        const clientEmailInput = document.getElementById('clientEmailInput');
-        const clientTypeInput = document.getElementById('clientTypeInput');
-        const editClientId = document.getElementById('editClientId');
-        const addClientBtn = document.getElementById('addClientBtn');
-        const cancelFormBtn = document.getElementById('cancelFormBtn');
-        const saveClientBtn = document.getElementById('saveClientBtn');
-
-        // filter buttons
-        const filterBtns = document.querySelectorAll('.filter-group button');
-
-        // ----- FUNÇÕES AUXILIARES -----
-        function getFilteredClients() {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            let filtered = clients;
-
-            // filtro por tipo
-            if (currentFilter !== 'all') {
-                filtered = filtered.filter(c => c.type === currentFilter);
-            }
-
-            // busca por nome ou email
-            if (searchTerm !== '') {
-                filtered = filtered.filter(c =>
-                    c.name.toLowerCase().includes(searchTerm) ||
-                    c.email.toLowerCase().includes(searchTerm)
-                );
-            }
-            return filtered;
-        }
-
-        function render() {
-            const filtered = getFilteredClients();
-            const count = filtered.length;
-
-            // atualiza contador
-            clientCounter.textContent = count + (count === 1 ? ' cliente' : ' clientes');
-
-            if (count === 0) {
-                clientListEl.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-user-slash"></i>
-                        <p style="font-weight:500; margin-top:4px;">Nenhum cliente encontrado</p>
-                        <p style="font-size:13px; color:#8f9db3;">Adicione um novo cliente</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-            filtered.forEach(client => {
-                const isVip = client.type === 'vip';
-                const tagText = isVip ? 'VIP' : 'Regular';
-                const tagClass = isVip ? 'vip' : 'regular';
-                html += `
-                    <div class="client-item" data-id="${client.id}">
-                        <div class="client-info">
-                            <div class="client-name">${escapeHtml(client.name)}</div>
-                            <div class="client-email"><i class="fas fa-envelope"></i> ${escapeHtml(client.email)}</div>
-                            <span class="client-tag" style="${isVip ? 'background:#d4e0fd; color:#0f3f8a;' : 'background:#eef2f7; color:#3d4f6b;'}">${tagText}</span>
-                        </div>
-                        <div class="client-actions">
-                            <button class="edit-btn" data-id="${client.id}" aria-label="Editar"><i class="fas fa-edit"></i></button>
-                            <button class="delete-btn" data-id="${client.id}" aria-label="Deletar"><i class="fas fa-trash-alt"></i></button>
+            <?php if (!empty($channels)): ?>
+                <section class="results">
+                    <div class="results-header">
+                        <h2>Canais Extraídos</h2>
+                        <div class="actions">
+                            <input type="text" id="search" placeholder="Buscar canais..." class="search-input">
+                            <button onclick="exportChannels('m3u')" class="btn-secondary">Exportar M3U</button>
+                            <button onclick="exportChannels('csv')" class="btn-secondary">Exportar CSV</button>
+                            <button onclick="exportChannels('json')" class="btn-secondary">Exportar JSON</button>
                         </div>
                     </div>
-                `;
+
+                    <div class="filter-group">
+                        <label>Filtrar por Grupo:</label>
+                        <select id="groupFilter" onchange="filterByGroup()">
+                            <option value="">Todos os Grupos</option>
+                            <?php
+                            $groups = array_unique(array_filter(array_column($channels, 'group')));
+                            sort($groups);
+                            foreach ($groups as $group):
+                            ?>
+                                <option value="<?php echo htmlspecialchars($group); ?>"><?php echo htmlspecialchars($group); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <table class="channels-table" id="channelsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Logo</th>
+                                <th>Nome</th>
+                                <th>Grupo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($channels as $index => $channel): ?>
+                                <tr data-group="<?php echo htmlspecialchars($channel['group'] ?? ''); ?>" data-index="<?php echo $index; ?>">
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td>
+                                        <?php if (!empty($channel['logo'])): ?>
+                                            <img src="<?php echo htmlspecialchars($channel['logo']); ?>" alt="Logo" class="channel-logo" onerror="this.style.display='none'">
+                                        <?php else: ?>
+                                            <span class="no-logo">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="channel-name"><?php echo htmlspecialchars($channel['name']); ?></td>
+                                    <td class="channel-group"><?php echo htmlspecialchars($channel['group'] ?? 'Sem grupo'); ?></td>
+                                    <td class="actions-cell">
+                                        <button onclick="playChannel(<?php echo $index; ?>)" class="btn-play">Reproduzir</button>
+                                        <a href="<?php echo htmlspecialchars($channel['url']); ?>" target="_blank" class="btn-external">Abrir</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </section>
+
+            <?php endif; ?>
+        </main>
+
+        <footer>
+            <p>Extrator de Listas M3U</p>
+        </footer>
+    </div>
+
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="playerTitle">Reproduzindo</h3>
+                <button onclick="closePlayer()" class="modal-close">&times;</button>
+            </div>
+            <div class="player-container">
+                <video id="videoPlayer" controls></video>
+            </div>
+            <div class="player-info">
+                <p id="playerGroup"></p>
+                <p id="playerUrl"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const channelsData = <?php echo json_encode($channels); ?>;
+        let currentHls = null;
+
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#channelsTable tbody tr');
+                rows.forEach(row => {
+                    const name = row.querySelector('.channel-name').textContent.toLowerCase();
+                    const group = row.querySelector('.channel-group').textContent.toLowerCase();
+                    row.style.display = (name.includes(searchTerm) || group.includes(searchTerm)) ? '' : 'none';
+                });
             });
-            clientListEl.innerHTML = html;
-
-            // eventos nos botões (delegação já está no container, mas usamos delegação)
         }
 
-        // escape para evitar XSS (simples)
-        function escapeHtml(text) {
-            if (!text) return '';
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
-
-        // atualiza o formulário para edição ou criação
-        function openForm(client = null) {
-            if (client) {
-                // edição
-                editingId = client.id;
-                formTitle.textContent = 'Editar cliente';
-                clientNameInput.value = client.name;
-                clientEmailInput.value = client.email;
-                clientTypeInput.value = client.type;
-                editClientId.value = client.id;
-            } else {
-                // novo
-                editingId = null;
-                formTitle.textContent = 'Novo cliente';
-                clientNameInput.value = '';
-                clientEmailInput.value = '';
-                clientTypeInput.value = 'regular';
-                editClientId.value = '';
-            }
-            formPanel.classList.add('open');
-            clientNameInput.focus();
-        }
-
-        function closeForm() {
-            formPanel.classList.remove('open');
-            editingId = null;
-            editClientId.value = '';
-            // limpa validação visual
-        }
-
-        // salvar cliente (cria ou atualiza)
-        function saveClient() {
-            const name = clientNameInput.value.trim();
-            const email = clientEmailInput.value.trim();
-            const type = clientTypeInput.value;
-
-            if (name === '' || email === '') {
-                alert('Preencha nome e e-mail.');
-                return;
-            }
-
-            // validação simples de email
-            if (!email.includes('@') || !email.includes('.')) {
-                alert('E-mail inválido. Insira um endereço válido.');
-                return;
-            }
-
-            const editing = editingId !== null;
-
-            if (editing) {
-                // atualiza
-                const index = clients.findIndex(c => c.id === editingId);
-                if (index !== -1) {
-                    clients[index] = {
-                        ...clients[index],
-                        name: name,
-                        email: email,
-                        type: type,
-                    };
+        function filterByGroup() {
+            const selectedGroup = document.getElementById('groupFilter').value;
+            const rows = document.querySelectorAll('#channelsTable tbody tr');
+            rows.forEach(row => {
+                if (!selectedGroup || row.dataset.group === selectedGroup) {
+                    row.style.display = '';
                 } else {
-                    alert('Cliente não encontrado.');
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function exportChannels(format) {
+            let content = '';
+            let filename = '';
+            let mimeType = '';
+            const visibleRows = Array.from(document.querySelectorAll('#channelsTable tbody tr'))
+                .filter(row => row.style.display !== 'none');
+            const visibleChannels = visibleRows.map(row => channelsData[parseInt(row.dataset.index)]).filter(Boolean);
+
+            if (format === 'm3u') {
+                content = '#EXTM3U\n';
+                visibleChannels.forEach(channel => {
+                    let extinf = '#EXTINF:-1';
+                    if (channel.logo) extinf += ` tvg-logo="${channel.logo}"`;
+                    if (channel.group) extinf += ` group-title="${channel.group}"`;
+                    extinf += `,${channel.name}\n`;
+                    content += extinf + channel.url + '\n';
+                });
+                filename = 'channels.m3u';
+                mimeType = 'audio/x-mpegurl';
+            } else if (format === 'csv') {
+                content = 'Nome,Grupo,Logo,URL\n';
+                visibleChannels.forEach(channel => {
+                    content += `"${channel.name}","${channel.group || ''}","${channel.logo || ''}","${channel.url}"\n`;
+                });
+                filename = 'channels.csv';
+                mimeType = 'text/csv';
+            } else if (format === 'json') {
+                content = JSON.stringify(visibleChannels, null, 2);
+                filename = 'channels.json';
+                mimeType = 'application/json';
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function playChannel(index) {
+            const channel = channelsData[index];
+            if (!channel) {
+                alert('Canal não encontrado.');
+                return;
+            }
+
+            const modal = document.getElementById('playerModal');
+            const video = document.getElementById('videoPlayer');
+            const title = document.getElementById('playerTitle');
+            const group = document.getElementById('playerGroup');
+            const urlInfo = document.getElementById('playerUrl');
+
+            title.textContent = channel.name;
+            group.textContent = channel.group ? `Grupo: ${channel.group}` : '';
+            urlInfo.textContent = channel.url.length > 60 ? channel.url.substring(0, 60) + '...' : channel.url;
+
+            if (currentHls) {
+                currentHls.destroy();
+                currentHls = null;
+            }
+
+            video.src = '';
+
+            const url = channel.url.toLowerCase();
+            
+            if (url.includes('.m3u8') || url.includes('m3u8')) {
+                if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                    currentHls = new Hls({
+                        debug: false,
+                        enableWorker: true,
+                        lowLatencyMode: true
+                    });
+                    currentHls.loadSource(channel.url);
+                    currentHls.attachMedia(video);
+                    currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.play().catch(e => console.log('Clique no play para iniciar', e));
+                    });
+                    currentHls.on(Hls.Events.ERROR, function(event, data) {
+                        if (data.fatal) {
+                            console.error('HLS Error:', data);
+                            alert('Erro ao carregar o stream. O servidor pode estar offline ou o formato não é suportado.');
+                        }
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = channel.url;
+                } else {
+                    alert('Seu navegador não suporta streams HLS.');
                     return;
                 }
             } else {
-                // cria novo
-                const newClient = {
-                    id: nextId++,
-                    name: name,
-                    email: email,
-                    type: type,
-                };
-                clients.push(newClient);
+                video.src = channel.url;
             }
 
-            closeForm();
-            render();
-            // força atualização da busca (se houver)
+            modal.style.display = 'flex';
         }
 
-        // deletar cliente
-        function deleteClient(id) {
-            if (!confirm('Remover este cliente?')) return;
-            clients = clients.filter(c => c.id !== id);
-            render();
+        function closePlayer() {
+            const modal = document.getElementById('playerModal');
+            const video = document.getElementById('videoPlayer');
+
+            if (currentHls) {
+                currentHls.destroy();
+                currentHls = null;
+            }
+
+            video.pause();
+            video.src = '';
+            modal.style.display = 'none';
         }
 
-        // ----- EVENTOS (delegação) -----
-        clientListEl.addEventListener('click', function(e) {
-            const target = e.target.closest('button');
-            if (!target) return;
-
-            // editar
-            if (target.classList.contains('edit-btn')) {
-                const id = Number(target.dataset.id);
-                const client = clients.find(c => c.id === id);
-                if (client) {
-                    openForm(client);
-                }
-                return;
-            }
-
-            // deletar
-            if (target.classList.contains('delete-btn')) {
-                const id = Number(target.dataset.id);
-                deleteClient(id);
-                return;
+        document.getElementById('playerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePlayer();
             }
         });
 
-        // botão adicionar
-        addClientBtn.addEventListener('click', function() {
-            openForm(null); // novo
-        });
-
-        // cancelar formulário
-        cancelFormBtn.addEventListener('click', closeForm);
-
-        // salvar
-        saveClientBtn.addEventListener('click', saveClient);
-
-        // busca com debounce simples
-        let searchTimeout = null;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => render(), 180);
-        });
-
-        // filtros
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentFilter = this.dataset.filter;
-                render();
-            });
-        });
-
-        // clique fora do form (opcional) - não implementado para não atrapalhar
-
-        // render inicial
-        render();
-
-        // Fechar form com ESC (extra)
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && formPanel.classList.contains('open')) {
-                closeForm();
+            if (e.key === 'Escape') {
+                closePlayer();
             }
         });
-
-        // pequeno truque: se clicar no fundo (fora do form) não fecha, mas mantemos assim.
-
-        // Para simular APK, garantir que o foco não role a tela em dispositivos
-        // e previnir comportamento padrão de submit
-        document.querySelectorAll('form, input, select').forEach(el => {
-            if (el.tagName === 'FORM') {
-                el.addEventListener('submit', e => e.preventDefault());
-            }
-        });
-
-        // ao pressionar Enter nos campos, salvar
-        clientNameInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                clientEmailInput.focus();
-            }
-        });
-        clientEmailInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                saveClient();
-            }
-        });
-
-        // pré-carregar dados
-        console.log('Gestor de Clientes APK carregado!');
-    })();
-</script>
+    </script>
 </body>
 </html>
