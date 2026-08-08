@@ -72,7 +72,6 @@
       visibility: hidden;
     }
 
-    /* Bola pulando (bala) */
     .bouncing-ball {
       display: flex;
       gap: 12px;
@@ -305,9 +304,10 @@
     .modal h2 { margin-bottom: 1.5rem; color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 10px; }
     .modal .detalhe-item {
       display: flex; padding: 0.7rem 0; border-bottom: 1px solid var(--border-color);
+      align-items: center;
     }
     .modal .detalhe-label { font-weight: 500; color: var(--text-secondary); width: 120px; flex-shrink: 0; }
-    .modal .detalhe-value { color: var(--text-primary); font-weight: 500; word-break: break-word; }
+    .modal .detalhe-value { color: var(--text-primary); font-weight: 500; word-break: break-word; display: flex; align-items: center; gap: 10px; }
     .modal .detalhe-value .badge {
       background: var(--badge-bg); color: var(--badge-text); padding: 2px 12px;
       border-radius: 40px; font-size: 0.8rem;
@@ -343,6 +343,33 @@
       transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
     }
     .modal .campo-opcional { color: var(--text-secondary); font-weight: 400; font-size: 0.8rem; }
+
+    /* Botão olho para mostrar senha */
+    .btn-eye {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px 8px;
+      border-radius: 30px;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-eye:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+    .senha-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .senha-texto {
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+    }
 
     @media (max-width:640px) { .main { padding: 1rem; } .cards-grid { grid-template-columns: 1fr 1fr; } .template-card .msg { max-width: 100%; } }
     @media (max-width:480px) { .cards-grid { grid-template-columns: 1fr; } }
@@ -454,9 +481,76 @@
 
 <script>
   (function() {
+    // ========== MÁSCARAS ==========
+    function aplicarMascaraData(input) {
+      if (!input) return;
+      input.addEventListener('input', function(e) {
+        let valor = this.value.replace(/\D/g, '');
+        if (valor.length > 8) valor = valor.slice(0, 8);
+        
+        let partes = [];
+        if (valor.length >= 3) {
+          partes.push(valor.slice(0, 2));
+          if (valor.length >= 5) {
+            partes.push(valor.slice(2, 4));
+            if (valor.length >= 7) {
+              partes.push(valor.slice(4, 8));
+            } else {
+              partes.push(valor.slice(4));
+            }
+          } else {
+            partes.push(valor.slice(2));
+          }
+        } else {
+          this.value = valor;
+          return;
+        }
+        this.value = partes.join('/');
+      });
+    }
+
+    function aplicarMascaraMAC(input) {
+      if (!input) return;
+      input.addEventListener('input', function(e) {
+        let valor = this.value.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+        if (valor.length > 12) valor = valor.slice(0, 12);
+        
+        let partes = [];
+        for (let i = 0; i < valor.length; i += 2) {
+          partes.push(valor.slice(i, i + 2));
+        }
+        this.value = partes.join(':');
+      });
+    }
+
+    function aplicarMascaraTelefone(input) {
+      if (!input) return;
+      input.addEventListener('input', function(e) {
+        let valor = this.value.replace(/\D/g, '');
+        if (valor.length > 11) valor = valor.slice(0, 11);
+        
+        let resultado = '';
+        if (valor.length > 0) {
+          if (valor.length >= 2) {
+            resultado += '(' + valor.slice(0, 2) + ')';
+            if (valor.length > 2) {
+              resultado += ' ';
+              if (valor.length <= 7) {
+                resultado += valor.slice(2);
+              } else {
+                resultado += valor.slice(2, 7) + '-' + valor.slice(7);
+              }
+            }
+          } else {
+            resultado = valor;
+          }
+        }
+        this.value = resultado;
+      });
+    }
+
     // ========== LOADING SCREEN ==========
     window.addEventListener('load', function() {
-      // Aumentei o tempo para 3 segundos para dar mais tempo de visualização
       setTimeout(function() {
         document.getElementById('loadingScreen').classList.add('hide');
       }, 3000);
@@ -548,6 +642,16 @@
       modalBody.innerHTML = html;
       modalOverlay.classList.add('show');
       modalCallback = callback || null;
+      
+      // Aplicar máscaras aos campos após abrir o modal
+      setTimeout(() => {
+        const inputData = document.getElementById('modalValidade');
+        const inputMac = document.getElementById('modalMac');
+        const inputTelefone = document.getElementById('modalWhats');
+        if (inputData) aplicarMascaraData(inputData);
+        if (inputMac) aplicarMascaraMAC(inputMac);
+        if (inputTelefone) aplicarMascaraTelefone(inputTelefone);
+      }, 100);
     }
 
     function fecharModal() { modalOverlay.classList.remove('show'); modalCallback = null; }
@@ -557,10 +661,10 @@
     // ========== FUNÇÃO PARA ADICIONAR 1 MÊS ==========
     function adicionarUmMes(dataStr) {
       if (!dataStr) return new Date().toISOString().split('T')[0];
-      const partes = dataStr.split('-');
-      let ano = parseInt(partes[0]);
+      const partes = dataStr.split('/');
+      let dia = parseInt(partes[0]);
       let mes = parseInt(partes[1]);
-      let dia = parseInt(partes[2]);
+      let ano = parseInt(partes[2]);
       
       mes += 1;
       if (mes > 12) { mes = 1; ano += 1; }
@@ -568,7 +672,15 @@
       const ultimoDia = new Date(ano, mes, 0).getDate();
       if (dia > ultimoDia) dia = ultimoDia;
       
-      return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+      return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+    }
+
+    // Converter data dd/mm/aaaa para timestamp
+    function dataParaTimestamp(dataStr) {
+      if (!dataStr) return 0;
+      const partes = dataStr.split('/');
+      if (partes.length !== 3) return 0;
+      return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0])).getTime();
     }
 
     // ========== RENDER GASTOS ==========
@@ -576,9 +688,9 @@
       const tbody = document.getElementById('gastoTableBody');
       if (!gastos.length) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Nenhum gasto cadastrado</td></tr>`; return; }
       tbody.innerHTML = gastos.map((g, idx) => {
-        const status = new Date(g.vencimento) >= new Date() ? 'Em dia' : 'Vencido';
-        const statusColor = new Date(g.vencimento) >= new Date() ? '#d7f0d7' : '#ffe4e4';
-        const textColor = new Date(g.vencimento) >= new Date() ? '#177317' : '#b81c1c';
+        const status = dataParaTimestamp(g.vencimento) >= new Date().getTime() ? 'Em dia' : 'Vencido';
+        const statusColor = dataParaTimestamp(g.vencimento) >= new Date().getTime() ? '#d7f0d7' : '#ffe4e4';
+        const textColor = dataParaTimestamp(g.vencimento) >= new Date().getTime() ? '#177317' : '#b81c1c';
         return `
         <tr>
           <td>${g.nome}</td>
@@ -611,10 +723,16 @@
       const html = `
         <label>Nome</label><input id="modalNome" value="${g.nome}">
         <label>Valor (R$)</label><input id="modalValor" type="number" step="0.01" value="${g.valor}">
-        <label>Data de Vencimento</label><input id="modalVencimento" type="date" value="${g.vencimento}">
+        <label>Data de Vencimento (dd/mm/aaaa)</label><input id="modalVencimento" value="${g.vencimento}" placeholder="dd/mm/aaaa">
         <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Cancelar</button><button class="btn-primary" id="modalSalvar">Salvar</button></div>
       `;
       abrirModal('✏️ Editar Gasto', html);
+      
+      setTimeout(() => {
+        const inputData = document.getElementById('modalVencimento');
+        if (inputData) aplicarMascaraData(inputData);
+      }, 100);
+      
       document.getElementById('modalSalvar').addEventListener('click', function() {
         const nome = document.getElementById('modalNome').value.trim();
         if (!nome) { alert('Nome é obrigatório'); return; }
@@ -627,7 +745,7 @@
 
     function visualizarGasto(idx) {
       const g = gastos[idx]; if (!g) return;
-      const status = new Date(g.vencimento) >= new Date() ? '<span class="badge" style="background:#d7f0d7;color:#177317;">Em dia</span>' : '<span class="badge" style="background:#ffe4e4;color:#b81c1c;">Vencido</span>';
+      const status = dataParaTimestamp(g.vencimento) >= new Date().getTime() ? '<span class="badge" style="background:#d7f0d7;color:#177317;">Em dia</span>' : '<span class="badge" style="background:#ffe4e4;color:#b81c1c;">Vencido</span>';
       const html = `
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-tag"></i> Nome</span><span class="detalhe-value">${g.nome}</span></div>
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-money-bill-wave"></i> Valor</span><span class="detalhe-value">R$ ${g.valor}</span></div>
@@ -816,9 +934,14 @@
     function atualizarDashboard() {
       const totalClientes = clientes.reduce((s,c) => s + parseFloat(c.valor || 0), 0);
       const totalGastos = gastos.reduce((s,g) => s + parseFloat(g.valor || 0), 0);
-      const ativos = clientes.filter(c => { const d = new Date(c.validade); return d >= new Date(); });
-      const vencem7 = clientes.filter(c => { const d = new Date(c.validade); const diff = Math.ceil((d - new Date())/(1000*60*60*24)); return diff >=0 && diff <=7; });
-      const vencidos = clientes.filter(c => { const d = new Date(c.validade); return d < new Date(); });
+      const agora = new Date().getTime();
+      
+      const ativos = clientes.filter(c => dataParaTimestamp(c.validade) >= agora);
+      const vencem7 = clientes.filter(c => { 
+        const diff = Math.ceil((dataParaTimestamp(c.validade) - agora)/(1000*60*60*24)); 
+        return diff >=0 && diff <=7; 
+      });
+      const vencidos = clientes.filter(c => dataParaTimestamp(c.validade) < agora);
       
       document.getElementById('totalReceber').textContent = `R$ ${totalClientes.toFixed(2)}`;
       document.getElementById('totalGasto').textContent = `R$ ${totalGastos.toFixed(2)}`;
@@ -836,15 +959,25 @@
       const c = clientes[idx]; if (!c) return;
       const html = `
         <label>Nome</label><input id="modalNome" value="${c.nome}">
-        <label>WhatsApp</label><input id="modalWhats" value="${c.whatsapp}">
+        <label>WhatsApp (00) 99999-9999</label><input id="modalWhats" value="${c.whatsapp}" placeholder="(11) 99999-9999" maxlength="15">
         <label>Valor (R$)</label><input id="modalValor" type="number" step="0.01" value="${c.valor}">
-        <label>Validade (AAAA-MM-DD)</label><input id="modalValidade" type="date" value="${c.validade}">
+        <label>Validade (dd/mm/aaaa)</label><input id="modalValidade" value="${c.validade}" placeholder="dd/mm/aaaa">
         <label>App <span class="campo-opcional">(opcional)</span></label><input id="modalApp" value="${c.app || ''}" placeholder="Ex: MyIPTV">
-        <label>MAC <span class="campo-opcional">(opcional)</span></label><input id="modalMac" value="${c.mac || ''}" placeholder="Ex: 00:1A:2B:3C:4D:5E">
+        <label>MAC (AA:BB:CC:DD:EE:FF)</label><input id="modalMac" value="${c.mac || ''}" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17">
         <label>Descrição</label><input id="modalDesc" value="${c.descricao || ''}">
         <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Cancelar</button><button class="btn-primary" id="modalSalvar">Salvar</button></div>
       `;
       abrirModal('✏️ Editar Cliente', html);
+      
+      setTimeout(() => {
+        const inputData = document.getElementById('modalValidade');
+        const inputMac = document.getElementById('modalMac');
+        const inputTelefone = document.getElementById('modalWhats');
+        if (inputData) aplicarMascaraData(inputData);
+        if (inputMac) aplicarMascaraMAC(inputMac);
+        if (inputTelefone) aplicarMascaraTelefone(inputTelefone);
+      }, 100);
+      
       document.getElementById('modalSalvar').addEventListener('click', function() {
         const nome = document.getElementById('modalNome').value.trim();
         if (!nome) { alert('Nome é obrigatório'); return; }
@@ -865,7 +998,7 @@
 
     function visualizarClienteProfissional(idx) {
       const c = clientes[idx]; if (!c) return;
-      const status = new Date(c.validade) >= new Date() ? '<span class="badge" style="background:#d7f0d7;color:#177317;">Ativo</span>' : '<span class="badge" style="background:#ffe4e4;color:#b81c1c;">Vencido</span>';
+      const status = dataParaTimestamp(c.validade) >= new Date().getTime() ? '<span class="badge" style="background:#d7f0d7;color:#177317;">Ativo</span>' : '<span class="badge" style="background:#ffe4e4;color:#b81c1c;">Vencido</span>';
       const html = `
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-user"></i> Nome</span><span class="detalhe-value">${c.nome}</span></div>
         <div class="detalhe-item"><span class="detalhe-label"><i class="fab fa-whatsapp"></i> WhatsApp</span><span class="detalhe-value">${c.whatsapp || '—'}</span></div>
@@ -981,15 +1114,54 @@
     function deletarPainel(idx) { if (!confirm('Deletar painel?')) return; paineis.splice(idx,1); salvarDados(); renderPaineis(); }
     function acessarPainel(idx) { const p = paineis[idx]; if (p) window.open(p.link, '_blank'); }
 
+    // ========== VISUALIZAR PAINEL COM OLHO ==========
     function visualizarPainelProfissional(idx) {
       const p = paineis[idx]; if (!p) return;
+      const senhaReal = p.senha || '—';
+      const temSenha = p.senha && p.senha.length > 0;
+      
       const html = `
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-link"></i> Link</span><span class="detalhe-value"><a href="${p.link}" target="_blank" style="color:var(--badge-text);">${p.link}</a></span></div>
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-user"></i> Usuário</span><span class="detalhe-value">${p.usuario || '—'}</span></div>
-        <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-lock"></i> Senha</span><span class="detalhe-value">${p.senha ? '••••••••' : '—'}</span></div>
-        <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Fechar</button><button class="btn-primary" onclick="window.open('${p.link}','_blank')"><i class="fas fa-external-link-alt"></i> Acessar</button></div>
+        <div class="detalhe-item">
+          <span class="detalhe-label"><i class="fas fa-lock"></i> Senha</span>
+          <span class="detalhe-value">
+            <span class="senha-container">
+              <span class="senha-texto" id="senhaVisualizar">${temSenha ? '••••••••' : '—'}</span>
+              ${temSenha ? `<button class="btn-eye" id="toggleSenhaBtn" title="Mostrar/ocultar senha"><i class="fas fa-eye"></i></button>` : ''}
+            </span>
+          </span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="fecharModal()">Fechar</button>
+          <button class="btn-primary" onclick="window.open('${p.link}','_blank')"><i class="fas fa-external-link-alt"></i> Acessar</button>
+        </div>
       `;
+      
       abrirModal(`<i class="fas fa-server" style="color:var(--text-primary);"></i> Dados do Painel`, html);
+      
+      // Configurar o botão de mostrar/ocultar senha
+      setTimeout(() => {
+        const toggleBtn = document.getElementById('toggleSenhaBtn');
+        const senhaSpan = document.getElementById('senhaVisualizar');
+        
+        if (toggleBtn && senhaSpan && temSenha) {
+          let senhaVisivel = false;
+          
+          toggleBtn.addEventListener('click', function() {
+            senhaVisivel = !senhaVisivel;
+            if (senhaVisivel) {
+              senhaSpan.textContent = senhaReal;
+              this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+              this.title = 'Ocultar senha';
+            } else {
+              senhaSpan.textContent = '••••••••';
+              this.innerHTML = '<i class="fas fa-eye"></i>';
+              this.title = 'Mostrar senha';
+            }
+          });
+        }
+      }, 100);
     }
 
     // ========== TEMPLATES (CRUD) ==========
@@ -1023,19 +1195,37 @@
     document.getElementById('btnNovoCliente').addEventListener('click', function() {
       const html = `
         <label>Nome *</label><input id="modalNome" placeholder="Nome do cliente">
-        <label>WhatsApp</label><input id="modalWhats" placeholder="(11) 99999-1111">
+        <label>WhatsApp (00) 99999-9999</label><input id="modalWhats" placeholder="(11) 99999-9999" maxlength="15">
         <label>Valor (R$)</label><input id="modalValor" type="number" step="0.01" placeholder="0.00">
-        <label>Validade (AAAA-MM-DD)</label><input id="modalValidade" type="date">
+        <label>Validade (dd/mm/aaaa)</label><input id="modalValidade" placeholder="dd/mm/aaaa">
         <label>App <span class="campo-opcional">(opcional)</span></label><input id="modalApp" placeholder="Nome do aplicativo">
-        <label>MAC <span class="campo-opcional">(opcional)</span></label><input id="modalMac" placeholder="00:1A:2B:3C:4D:5E">
+        <label>MAC (AA:BB:CC:DD:EE:FF)</label><input id="modalMac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17">
         <label>Descrição</label><input id="modalDesc" placeholder="Descrição opcional">
         <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Cancelar</button><button class="btn-primary" id="modalSalvar">Salvar</button></div>
       `;
       abrirModal('➕ Novo Cliente', html);
+      
+      setTimeout(() => {
+        const inputData = document.getElementById('modalValidade');
+        const inputMac = document.getElementById('modalMac');
+        const inputTelefone = document.getElementById('modalWhats');
+        if (inputData) aplicarMascaraData(inputData);
+        if (inputMac) aplicarMascaraMAC(inputMac);
+        if (inputTelefone) aplicarMascaraTelefone(inputTelefone);
+      }, 100);
+      
       document.getElementById('modalSalvar').addEventListener('click', function() {
         const nome = document.getElementById('modalNome').value.trim();
         if (!nome) { alert('Nome é obrigatório'); return; }
-        clientes.push({ nome, whatsapp: document.getElementById('modalWhats').value.trim(), valor: parseFloat(document.getElementById('modalValor').value) || 0, validade: document.getElementById('modalValidade').value || '2026-12-31', app: document.getElementById('modalApp').value.trim(), mac: document.getElementById('modalMac').value.trim(), descricao: document.getElementById('modalDesc').value.trim() });
+        clientes.push({ 
+          nome, 
+          whatsapp: document.getElementById('modalWhats').value.trim(), 
+          valor: parseFloat(document.getElementById('modalValor').value) || 0, 
+          validade: document.getElementById('modalValidade').value || '01/01/2027', 
+          app: document.getElementById('modalApp').value.trim(), 
+          mac: document.getElementById('modalMac').value.trim(), 
+          descricao: document.getElementById('modalDesc').value.trim() 
+        });
         salvarDados(); renderClientes(); atualizarDashboard(); fecharModal();
       });
     });
@@ -1060,14 +1250,20 @@
       const html = `
         <label>Nome *</label><input id="modalNome" placeholder="Nome do gasto">
         <label>Valor (R$)</label><input id="modalValor" type="number" step="0.01" placeholder="0.00">
-        <label>Data de Vencimento</label><input id="modalVencimento" type="date">
+        <label>Data de Vencimento (dd/mm/aaaa)</label><input id="modalVencimento" placeholder="dd/mm/aaaa">
         <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Cancelar</button><button class="btn-primary" id="modalSalvar">Salvar</button></div>
       `;
       abrirModal('➕ Novo Gasto', html);
+      
+      setTimeout(() => {
+        const inputData = document.getElementById('modalVencimento');
+        if (inputData) aplicarMascaraData(inputData);
+      }, 100);
+      
       document.getElementById('modalSalvar').addEventListener('click', function() {
         const nome = document.getElementById('modalNome').value.trim();
         if (!nome) { alert('Nome é obrigatório'); return; }
-        gastos.push({ nome, valor: parseFloat(document.getElementById('modalValor').value) || 0, vencimento: document.getElementById('modalVencimento').value || new Date().toISOString().split('T')[0] });
+        gastos.push({ nome, valor: parseFloat(document.getElementById('modalValor').value) || 0, vencimento: document.getElementById('modalVencimento').value || '01/01/2027' });
         salvarDados(); renderGastos(); atualizarDashboard(); fecharModal();
       });
     });
