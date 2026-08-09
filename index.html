@@ -250,7 +250,7 @@
       border: 1px solid var(--border-color); margin-top: 1.8rem; overflow-x: auto;
       transition: background 0.3s ease, border 0.3s ease;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 680px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 750px; }
     th { text-align: left; padding: 0.9rem 0.5rem 0.7rem 0.5rem; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border-color); }
     td { padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
     .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -378,7 +378,7 @@
       letter-spacing: 1px;
     }
 
-    /* Botões WhatsApp */
+    /* WhatsApp options */
     .whatsapp-options {
       display: flex;
       gap: 8px;
@@ -492,7 +492,7 @@
   <!-- CLIENTES -->
   <section id="page-clientes" class="page">
     <div class="flex-between"><h1><i class="fas fa-users" style="color:#1f4b78;"></i> Clientes</h1><button class="btn-primary-sm" id="btnNovoCliente"><i class="fas fa-user-plus"></i> Novo</button></div>
-    <div class="table-wrapper"><table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Valor</th><th>Validade</th><th>App</th><th>MAC</th><th>Ações</th></tr></thead><tbody id="clienteTableBody"></tbody></table></div>
+    <div class="table-wrapper"><table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Valor</th><th>Validade</th><th>App</th><th>MAC</th><th>Device Key</th><th>Ações</th></tr></thead><tbody id="clienteTableBody"></tbody></table></div>
   </section>
 
   <!-- GASTOS -->
@@ -880,7 +880,7 @@
     // ========== RENDER CLIENTES ==========
     function renderClientes() {
       const tbody = document.getElementById('clienteTableBody');
-      if (!clientes.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-secondary);">Nenhum cliente cadastrado</td></tr>`; return; }
+      if (!clientes.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-secondary);">Nenhum cliente cadastrado</td></tr>`; return; }
       tbody.innerHTML = clientes.map((c, idx) => `
         <tr>
           <td>${c.nome}</td>
@@ -888,7 +888,8 @@
           <td>R$ ${c.valor}</td>
           <td>${c.validade}</td>
           <td>${c.app || '—'}</td>
-          <td>${c.mac || '—'}</td>
+          <td style="font-family:monospace;font-size:0.8rem;">${c.mac || '—'}</td>
+          <td style="font-family:monospace;font-size:0.8rem;">${c.deviceKey || '—'}</td>
           <td><div class="action-btns">
             <button class="btn-icon" data-acao="editarCliente" data-idx="${idx}"><i class="fas fa-edit"></i></button>
             <button class="btn-icon danger" data-acao="deletarCliente" data-idx="${idx}"><i class="fas fa-trash"></i></button>
@@ -1004,6 +1005,7 @@
         <label>Validade (dd/mm/aaaa)</label><input id="modalValidade" value="${c.validade}" placeholder="dd/mm/aaaa">
         <label>App <span class="campo-opcional">(opcional)</span></label><input id="modalApp" value="${c.app || ''}" placeholder="Ex: MyIPTV">
         <label>MAC (AA:BB:CC:DD:EE:FF)</label><input id="modalMac" value="${c.mac || ''}" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17">
+        <label>Device Key <span class="campo-opcional">(opcional)</span></label><input id="modalDeviceKey" value="${c.deviceKey || ''}" placeholder="Código do dispositivo">
         <label>Descrição</label><input id="modalDesc" value="${c.descricao || ''}">
         <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Cancelar</button><button class="btn-primary" id="modalSalvar">Salvar</button></div>
       `;
@@ -1028,6 +1030,7 @@
           validade: document.getElementById('modalValidade').value,
           app: document.getElementById('modalApp').value.trim(),
           mac: document.getElementById('modalMac').value.trim(),
+          deviceKey: document.getElementById('modalDeviceKey').value.trim(),
           descricao: document.getElementById('modalDesc').value.trim()
         };
         salvarDados(); renderClientes(); atualizarDashboard(); fecharModal();
@@ -1045,7 +1048,8 @@
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-money-bill-wave"></i> Valor</span><span class="detalhe-value">R$ ${c.valor}</span></div>
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-calendar-day"></i> Validade</span><span class="detalhe-value">${c.validade} ${status}</span></div>
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-mobile-alt"></i> App</span><span class="detalhe-value">${c.app || '—'}</span></div>
-        <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-network-wired"></i> MAC</span><span class="detalhe-value">${c.mac || '—'}</span></div>
+        <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-network-wired"></i> MAC</span><span class="detalhe-value" style="font-family:monospace;">${c.mac || '—'}</span></div>
+        <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-key"></i> Device Key</span><span class="detalhe-value" style="font-family:monospace;">${c.deviceKey || '—'}</span></div>
         <div class="detalhe-item"><span class="detalhe-label"><i class="fas fa-align-left"></i> Descrição</span><span class="detalhe-value">${c.descricao || '—'}</span></div>
         <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Fechar</button></div>
       `;
@@ -1059,7 +1063,7 @@
       const templateTexto = template ? template.texto : 'Olá {nome}, sua renovação foi confirmada! Nova validade: {validade}.';
       let renovacaoConfirmada = false;
       let mensagemFinal = '';
-      let tipoWhatsApp = 'normal'; // 'normal' ou 'business'
+      let tipoWhatsApp = 'normal';
       
       const html = `
         <div style="text-align: center; margin-bottom: 1.5rem;">
@@ -1095,7 +1099,6 @@
       
       abrirModal(`<i class="fas fa-sync-alt" style="color:#f97316;"></i> Renovar Cliente`, html);
       
-      // Configurar seleção de WhatsApp
       const botoesWhats = document.querySelectorAll('.btn-whatsapp-option');
       botoesWhats.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1103,7 +1106,6 @@
           this.classList.add('active');
           tipoWhatsApp = this.dataset.whatsapp;
           
-          // Atualizar ícone do botão de envio
           const btnEnviar = document.getElementById('btnEnviarWhatsApp');
           if (btnEnviar) {
             if (tipoWhatsApp === 'business') {
@@ -1130,7 +1132,6 @@
         btnCopiar.style.display = 'inline-flex';
         btnWhatsApp.style.display = 'inline-flex';
         
-        // Atualizar ícone do botão de envio conforme seleção
         if (tipoWhatsApp === 'business') {
           btnWhatsApp.innerHTML = '<i class="fab fa-whatsapp"></i> <i class="fas fa-building" style="font-size:0.7rem;"></i> Enviar Business';
           btnWhatsApp.className = 'btn-whatsapp-business';
@@ -1163,13 +1164,7 @@
       btnWhatsApp.addEventListener('click', function() {
         if (!mensagemFinal || !c.whatsapp) return alert('⚠️ Cliente sem WhatsApp.');
         const numero = c.whatsapp.replace(/\D/g,'');
-        let url;
-        if (tipoWhatsApp === 'business') {
-          url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagemFinal)}`;
-          // Para Business, também pode usar: https://wa.me/5511999999999?text=...
-        } else {
-          url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagemFinal)}`;
-        }
+        const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagemFinal)}`;
         window.open(url, '_blank');
       });
     }
@@ -1180,7 +1175,6 @@
       let msg = template ? template.texto : 'Olá, seu plano IPTV está próximo do vencimento.';
       msg = msg.replace(/{nome}/g, c.nome).replace(/{valor}/g, c.valor).replace(/{validade}/g, c.validade);
       
-      // Mostrar modal para escolher WhatsApp Normal ou Business
       let tipoWhatsApp = 'normal';
       const html = `
         <div style="text-align: center; margin-bottom: 1.5rem;">
@@ -1211,7 +1205,6 @@
       
       abrirModal(`<i class="fas fa-comment-dots" style="color:#25D366;"></i> Enviar para ${c.nome}`, html);
       
-      // Configurar seleção de WhatsApp
       const botoesWhats = document.querySelectorAll('.btn-whatsapp-option');
       const btnEnviar = document.getElementById('btnEnviarMensagem');
       
@@ -1233,12 +1226,7 @@
       
       btnEnviar.addEventListener('click', function() {
         const numero = c.whatsapp.replace(/\D/g,'');
-        let url;
-        if (tipoWhatsApp === 'business') {
-          url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
-        } else {
-          url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
-        }
+        const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
         fecharModal();
       });
@@ -1300,7 +1288,6 @@
       
       abrirModal(`<i class="fas fa-server" style="color:var(--text-primary);"></i> Dados do Painel`, html);
       
-      // Configurar o botão de mostrar/ocultar senha
       setTimeout(() => {
         const toggleBtn = document.getElementById('toggleSenhaBtn');
         const senhaSpan = document.getElementById('senhaVisualizar');
@@ -1333,7 +1320,6 @@
       if (!primeiroCliente) { alert('Nenhum cliente para enviar'); return; }
       let msg = t.texto.replace(/{nome}/g, primeiroCliente.nome).replace(/{valor}/g, primeiroCliente.valor).replace(/{validade}/g, primeiroCliente.validade);
       
-      // Mostrar modal para escolher WhatsApp Normal ou Business
       let tipoWhatsApp = 'normal';
       const html = `
         <div style="text-align: center; margin-bottom: 1.5rem;">
@@ -1385,12 +1371,7 @@
       
       btnEnviar.addEventListener('click', function() {
         const numero = primeiroCliente.whatsapp.replace(/\D/g,'');
-        let url;
-        if (tipoWhatsApp === 'business') {
-          url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
-        } else {
-          url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
-        }
+        const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
         fecharModal();
       });
@@ -1422,6 +1403,7 @@
         <label>Validade (dd/mm/aaaa)</label><input id="modalValidade" placeholder="dd/mm/aaaa">
         <label>App <span class="campo-opcional">(opcional)</span></label><input id="modalApp" placeholder="Nome do aplicativo">
         <label>MAC (AA:BB:CC:DD:EE:FF)</label><input id="modalMac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17">
+        <label>Device Key <span class="campo-opcional">(opcional)</span></label><input id="modalDeviceKey" placeholder="Código do dispositivo">
         <label>Descrição</label><input id="modalDesc" placeholder="Descrição opcional">
         <div class="btn-row"><button class="btn-secondary" onclick="fecharModal()">Cancelar</button><button class="btn-primary" id="modalSalvar">Salvar</button></div>
       `;
@@ -1445,7 +1427,8 @@
           valor: parseFloat(document.getElementById('modalValor').value) || 0, 
           validade: document.getElementById('modalValidade').value || '01/01/2027', 
           app: document.getElementById('modalApp').value.trim(), 
-          mac: document.getElementById('modalMac').value.trim(), 
+          mac: document.getElementById('modalMac').value.trim(),
+          deviceKey: document.getElementById('modalDeviceKey').value.trim(),
           descricao: document.getElementById('modalDesc').value.trim() 
         });
         salvarDados(); renderClientes(); atualizarDashboard(); fecharModal();
