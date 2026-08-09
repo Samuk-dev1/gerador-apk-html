@@ -410,6 +410,17 @@
       background: #25D36620;
     }
 
+    /* Badge para indicar Business */
+    .badge-business {
+      background: #25D36620;
+      color: #25D366;
+      font-size: 0.6rem;
+      padding: 1px 8px;
+      border-radius: 30px;
+      border: 1px solid #25D36640;
+      margin-left: 4px;
+    }
+
     @media (max-width:640px) { .main { padding: 1rem; } .cards-grid { grid-template-columns: 1fr 1fr; } .template-card .msg { max-width: 100%; } }
     @media (max-width:480px) { .cards-grid { grid-template-columns: 1fr; } }
   </style>
@@ -588,6 +599,55 @@
       });
     }
 
+    // ========== FUNÇÃO PARA ABRIR WHATSAPP ==========
+    function abrirWhatsApp(numero, mensagem, tipo) {
+      // Remove tudo que não é número
+      const numeroLimpo = numero.replace(/\D/g, '');
+      
+      // Codifica a mensagem para URL
+      const msgCodificada = encodeURIComponent(mensagem);
+      
+      // Constrói a URL base
+      let url;
+      
+      if (tipo === 'business') {
+        // Para WhatsApp Business, usamos o intent para Android que funciona melhor
+        // Detecta se é mobile
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // Android - usa intent para abrir o Business
+          if (/Android/i.test(navigator.userAgent)) {
+            url = `intent://send?phone=${numeroLimpo}&text=${msgCodificada}#Intent;package=com.whatsapp.w4b;action=android.intent.action.VIEW;scheme=https;end`;
+          } else {
+            // iOS - tenta o link do Business
+            url = `https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${msgCodificada}`;
+            // No iOS, se tiver o Business instalado, pode funcionar com o link normal
+            // Mas tentamos também o esquema whatsapp://
+            // Vamos abrir em uma nova janela com fallback
+          }
+        } else {
+          // Desktop - usa o link normal
+          url = `https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${msgCodificada}`;
+        }
+      } else {
+        // WhatsApp Normal
+        url = `https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${msgCodificada}`;
+      }
+      
+      // Abre a URL
+      if (url.startsWith('intent://')) {
+        // Para intents, usamos location.href
+        window.location.href = url;
+        // Fallback caso o intent não funcione
+        setTimeout(function() {
+          window.open(`https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${msgCodificada}`, '_blank');
+        }, 2000);
+      } else {
+        window.open(url, '_blank');
+      }
+    }
+
     // ========== LOADING SCREEN ==========
     window.addEventListener('load', function() {
       setTimeout(function() {
@@ -682,7 +742,6 @@
       modalOverlay.classList.add('show');
       modalCallback = callback || null;
       
-      // Aplicar máscaras aos campos após abrir o modal
       setTimeout(() => {
         const inputData = document.getElementById('modalValidade');
         const inputMac = document.getElementById('modalMac');
@@ -1163,9 +1222,7 @@
       
       btnWhatsApp.addEventListener('click', function() {
         if (!mensagemFinal || !c.whatsapp) return alert('⚠️ Cliente sem WhatsApp.');
-        const numero = c.whatsapp.replace(/\D/g,'');
-        const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagemFinal)}`;
-        window.open(url, '_blank');
+        abrirWhatsApp(c.whatsapp, mensagemFinal, tipoWhatsApp);
       });
     }
 
@@ -1194,6 +1251,7 @@
           </button>
           <button class="btn-whatsapp-option" data-whatsapp="business">
             <i class="fab fa-whatsapp"></i> <i class="fas fa-building" style="font-size:0.7rem;"></i> WhatsApp Business
+            <span class="badge-business">Business</span>
           </button>
         </div>
         
@@ -1225,9 +1283,7 @@
       });
       
       btnEnviar.addEventListener('click', function() {
-        const numero = c.whatsapp.replace(/\D/g,'');
-        const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
-        window.open(url, '_blank');
+        abrirWhatsApp(c.whatsapp, msg, tipoWhatsApp);
         fecharModal();
       });
     }
@@ -1339,6 +1395,7 @@
           </button>
           <button class="btn-whatsapp-option" data-whatsapp="business">
             <i class="fab fa-whatsapp"></i> <i class="fas fa-building" style="font-size:0.7rem;"></i> WhatsApp Business
+            <span class="badge-business">Business</span>
           </button>
         </div>
         
@@ -1370,9 +1427,7 @@
       });
       
       btnEnviar.addEventListener('click', function() {
-        const numero = primeiroCliente.whatsapp.replace(/\D/g,'');
-        const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(msg)}`;
-        window.open(url, '_blank');
+        abrirWhatsApp(primeiroCliente.whatsapp, msg, tipoWhatsApp);
         fecharModal();
       });
     }
